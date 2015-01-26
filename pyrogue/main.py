@@ -21,7 +21,7 @@ import logging
 import argparse
 import curses
 
-from . import g
+from . import g, window
 from .player import Player
 
 
@@ -91,10 +91,9 @@ def game(stdscr):
     player = Player(g.PLAYERNAME)
     screen.addch(player.row, player.col, player.char)
 
-    screen.addstr(g.ROWS-1, 0,
-                  'Screen size: {} x {}\tColor support: {}\tRGB support: {}'.format(
-                    cols, rows, curses.has_colors(), curses.can_change_color()),
-                  curses.A_REVERSE)
+    window.statusbar(screen, player)
+    window.box(screen, (10, 10), (5, 5))
+
 
     screen.refresh()
     screen.getkey()
