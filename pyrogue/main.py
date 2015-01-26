@@ -19,8 +19,16 @@
 
 import logging
 import argparse
+import curses
+
+from . import g
+
 
 log = logging.getLogger(__name__)
+
+
+class GameError(Exception):
+    pass
 
 
 def parseargs(argv=None):
@@ -56,3 +64,28 @@ def main(argv=None):
         format="[%(levelname)-8s] %(asctime)s %(module)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
+
+    try:
+        curses.wrapper(game)
+    except GameError as e:
+        log.error(e)
+
+
+def game(stdscr):
+    cols = getattr(curses, 'COLS',  0)
+    rows = getattr(curses, 'LINES', 0)
+    log.info("Terminal size: %d x %d", cols, rows)
+
+    if cols < g.COLS or rows < g.ROWS:
+        raise GameError("{} requires a terminal of at least {} x {},"
+                        " current is {} x {}".format(
+                        g.APPNAME, g.COLS, g.ROWS, cols, rows))
+
+    curses.use_default_colors()
+    curses.curs_set(False)
+
+    screen = curses.newwin(g.ROWS, g.COLS, 0, 0)  # x and y are swapped!
+    screen.clear()
+    screen.addstr(0, 0, 'Screen size: {} x {}'.format(cols, rows))
+    screen.refresh()
+    screen.getkey()
