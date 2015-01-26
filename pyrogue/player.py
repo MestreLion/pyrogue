@@ -15,21 +15,16 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program. See <http://www.gnu.org/licenses/gpl.html>
 
-'''Global constants and paths'''
+'''Player class'''
 
-import os.path
 import logging
 
 
 log = logging.getLogger(__name__)
 
-# General
-VERSION = "0.1"
-APPNAME = 'pyrogue'
-
-# Paths
-GAMEDIR = os.path.abspath(os.path.dirname(__file__) or '.')
-
-# Misc
-COLS, ROWS = (80, 25)  # Screen size
-PLAYERNAME = "MestreLion"  # The player default name
+class Player(object):
+    def __init__(self, name):
+        self.name = name
+        self.char = "@"
+        self.row = 0
+        self.col = 0

@@ -22,6 +22,7 @@ import argparse
 import curses
 
 from . import g
+from .player import Player
 
 
 log = logging.getLogger(__name__)
@@ -86,6 +87,14 @@ def game(stdscr):
 
     screen = curses.newwin(g.ROWS, g.COLS, 0, 0)  # x and y are swapped!
     screen.clear()
-    screen.addstr(0, 0, 'Screen size: {} x {}'.format(cols, rows))
+
+    player = Player(g.PLAYERNAME)
+    screen.addch(player.row, player.col, player.char)
+
+    screen.addstr(g.ROWS-1, 0,
+                  'Screen size: {} x {}\tColor support: {}\tRGB support: {}'.format(
+                    cols, rows, curses.has_colors(), curses.can_change_color()),
+                  curses.A_REVERSE)
+
     screen.refresh()
     screen.getkey()
