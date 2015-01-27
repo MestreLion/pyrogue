@@ -20,6 +20,11 @@
 import os.path
 import logging
 
+try:
+    import xdg.BaseDirectory as xdg
+except ImportError:
+    from . import xdg
+
 
 log = logging.getLogger(__name__)
 
@@ -29,6 +34,7 @@ APPNAME = 'pyrogue'
 
 # Paths
 GAMEDIR = os.path.abspath(os.path.dirname(__file__) or '.')
+CONFIGDIR = xdg.save_config_path(APPNAME)
 
 # Misc
 COLS, ROWS = (80, 25)  # Screen size

@@ -17,6 +17,7 @@
 
 '''Main module and entry point'''
 
+import os
 import logging
 import argparse
 import curses
@@ -64,7 +65,7 @@ def main(argv=None):
         level=args.loglevel,
         format="[%(levelname)-8s] %(asctime)s %(module)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
-        filename="{}.log".format(g.APPNAME)
+        filename=os.path.join(g.CONFIGDIR, "{}.log".format(g.APPNAME))
     )
 
     try:
