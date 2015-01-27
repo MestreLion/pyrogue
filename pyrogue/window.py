@@ -49,6 +49,26 @@ class Window(object):
         boxwin.window.box()
         return boxwin
 
+    def move(self, object, dr, dc):
+        row = object.row + dr
+        col = object.col + dc
+        mr, mc = self.size
+
+        # Account for walls on edges
+        if (row < 1 or
+            col < 1 or
+            row > mr - 2 or
+            col > mc - 2):
+            return
+
+        # Erase previous
+        self.window.addch(object.row, object.col, ' ')
+
+        # Set new
+        object.row = row
+        object.col = col
+        self.window.addch(row, col, object.char)
+
 
 class Screen(Window):
     def __init__(self, stdscr, size):

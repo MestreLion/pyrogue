@@ -32,3 +32,7 @@ class Player(object):
 
         self.row = row
         self.col = col
+        self.move(0, 0)
+
+    def move(self, dr, dc):
+        self.dungeon.move(self, dr, dc)
