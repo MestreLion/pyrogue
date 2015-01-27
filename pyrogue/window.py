@@ -24,10 +24,10 @@ import curses
 log = logging.getLogger(__name__)
 
 
-def left(  text, width): return align(text, width, "<")
-def center(text, width): return align(text, width, "^")
-def right( text, width): return align(text, width, ">")
-def align( text, width, align, fill=' '):
+def left(  text, width, fill=' '): return align(text, width, fill, "<")
+def center(text, width, fill=' '): return align(text, width, fill, "^")
+def right( text, width, fill=' '): return align(text, width, fill, ">")
+def align( text, width, fill, align):
     return "{0:{1}{2}{3}}".format(text.replace("\t", 4 * " "),
                                   fill, align, width)
 
@@ -70,6 +70,6 @@ class Screen(Window):
         self.window.insstr(rows-1, 0, msg, curses.A_REVERSE)
 
     def message(self, text, *args, **kwargs):
-        msg = text.format(*args, **kwargs)
+        msg = text.format(*args, **kwargs).replace('\n', '\\n').replace('\0', '\\0')
         log.info(msg)
-        self.window.addnstr(0, 0, msg, self.size[1])
+        self.window.addnstr(0, 0, left(msg, self.size[1]), self.size[1])
