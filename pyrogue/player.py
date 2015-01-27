@@ -22,9 +22,13 @@ import logging
 
 log = logging.getLogger(__name__)
 
+
 class Player(object):
-    def __init__(self, name):
+    def __init__(self, name, dungeon, row=0, col=0):
         self.name = name
+        self.dungeon = dungeon
+
         self.char = "@"
-        self.row = 0
-        self.col = 0
+
+        self.row = int(row)
+        self.col = int(col)

@@ -32,4 +32,5 @@ GAMEDIR = os.path.abspath(os.path.dirname(__file__) or '.')
 
 # Misc
 COLS, ROWS = (80, 25)  # Screen size
+DCOLS, DROWS = (COLS, ROWS-3)  # Dungeon size: screen height - (message + status + clock)
 PLAYERNAME = "MestreLion"  # The player default name

@@ -44,6 +44,17 @@ def statusbar(window, player):
                  cols)  # last line has width - 1 to avoid scrolling
     window.insstr(rows-1, 0, msg, curses.A_REVERSE)
 
-def box(window, position, size):
-    subwin = window.subwin(*(size + position))
+
+def box(window, position=(), size=()):
+    if not position:
+        position = (0, 0)
+    if not size:
+        size = window.getmaxyx()
+    subwin = window.derwin(*(size + position))
     subwin.box()
+
+
+def message(window, text, *args, **kwargs):
+    msg = text.format(*args, **kwargs)
+    log.info(msg)
+    window.addnstr(0, 0, msg, window.getmaxyx()[1])

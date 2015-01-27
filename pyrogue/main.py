@@ -64,6 +64,7 @@ def main(argv=None):
         level=args.loglevel,
         format="[%(levelname)-8s] %(asctime)s %(module)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
+        filename="{}.log".format(g.APPNAME)
     )
 
     try:
@@ -86,14 +87,16 @@ def game(stdscr):
     curses.curs_set(False)
 
     screen = curses.newwin(g.ROWS, g.COLS, 0, 0)  # x and y are swapped!
+    dungeon = screen.subwin(g.DROWS, g.DCOLS, 1, 0)
+    player = Player(g.PLAYERNAME, dungeon, g.DROWS / 2, g.DCOLS / 2)
+
     screen.clear()
-
-    player = Player(g.PLAYERNAME)
+    window.message(screen, "Hello {}. Welcome to the Dungeons of Doom",
+                   player.name)
+    window.box(dungeon)
     screen.addch(player.row, player.col, player.char)
-
     window.statusbar(screen, player)
-    window.box(screen, (10, 10), (5, 5))
-
 
     screen.refresh()
     screen.getkey()
+    curses.flushinp()
