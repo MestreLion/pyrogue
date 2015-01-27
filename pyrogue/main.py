@@ -69,6 +69,7 @@ def main(argv=None):
 
     try:
         curses.wrapper(game)
+        curses.flushinp()
     except GameError as e:
         log.error(e)
 
@@ -96,6 +97,10 @@ def game(stdscr):
     dungeon.window.addch(player.row, player.col, player.char)
     screen.statusbar(player)
 
-    screen.window.refresh()
-    screen.window.getkey()
-    curses.flushinp()
+    while True:
+        ch = screen.window.getch()
+        if ch == ord('Q'):
+            break
+        screen.message("Ch={}", ch)
+        screen.statusbar(player)
+        screen.window.refresh()
