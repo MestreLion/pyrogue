@@ -30,5 +30,5 @@ class Player(object):
 
         self.char = "@"
 
-        self.row = int(row)
-        self.col = int(col)
+        self.row = row
+        self.col = col

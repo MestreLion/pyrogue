@@ -38,6 +38,7 @@ class Window(object):
         self.position = position
         self.size = size
         self.window = self.parent.derwin(*(self.size + self.position))
+        self.window.keypad(1)
 
     def box(self, position=(), size=()):
         if not position:
@@ -51,10 +52,13 @@ class Window(object):
 
 class Screen(Window):
     def __init__(self, stdscr, size):
-        self.parent = stdscr
+        self.parent = None
         self.position = (0, 0)
         self.size = size
-        self.window = curses.newwin(*(self.size + self.position))
+        self.window = stdscr
+        if self.size != self.window.getmaxyx():
+            self.window.resize(*size)
+
         self.dungeon = Window(self.window, (1, 0), (self.size[0]-3, self.size[1]))
         self.dungeon.box()
 

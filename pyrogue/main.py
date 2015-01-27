@@ -22,7 +22,9 @@ import logging
 import argparse
 import curses
 
-from . import g, window
+from . import g
+from . import window
+from . import keyboard
 from .player import Player
 
 
@@ -68,6 +70,8 @@ def main(argv=None):
         filename=os.path.join(g.CONFIGDIR, "{}.log".format(g.APPNAME))
     )
 
+    keyboard.set_term()
+
     try:
         curses.wrapper(game)
         curses.flushinp()
@@ -86,12 +90,21 @@ def game(stdscr):
                         g.APPNAME, g.COLS, g.ROWS, cols, rows))
 
     curses.use_default_colors()
-    curses.curs_set(False)
+
+    # Cursor: 0=invisible, 1=normal (underline), 2="very visible" (block)
+    # Normal cursor is only available in real consoles, X11-based ones
+    # are always block
+    if keyboard.is_console:
+        curses.curs_set(1)
+    else:
+        curses.curs_set(0)
 
     screen = window.Screen(stdscr, (g.ROWS, g.COLS))
     dungeon = screen.dungeon
-    drows, dcols = dungeon.size
-    player = Player(g.PLAYERNAME, dungeon, int(drows/2), int(dcols/2))
+    player = Player(g.PLAYERNAME,
+                    dungeon,
+                    int(dungeon.size[0] / 2),
+                    int(dungeon.size[1] / 2))
 
     screen.message("Hello {}. Welcome to the Dungeons of Doom",
                    player.name)
