@@ -24,37 +24,52 @@ import curses
 log = logging.getLogger(__name__)
 
 
-def align(text, width, align, fill=' '):
-    return "{0:{1}{2}{3}}".format(text.replace("\t", 4 * " "),
-                                  fill, align, width)
-
 def left(  text, width): return align(text, width, "<")
 def center(text, width): return align(text, width, "^")
 def right( text, width): return align(text, width, ">")
+def align( text, width, align, fill=' '):
+    return "{0:{1}{2}{3}}".format(text.replace("\t", 4 * " "),
+                                  fill, align, width)
 
 
-def statusbar(window, player):
-    rows, cols = window.getmaxyx()
-    msg = center("Screen size: {} x {}\t"
-                 "Color support: {}\t"
-                 "RGB support: {}".format(
-                        cols, rows,
-                        curses.has_colors(),
-                        curses.can_change_color()),
-                 cols)  # last line has width - 1 to avoid scrolling
-    window.insstr(rows-1, 0, msg, curses.A_REVERSE)
+class Window(object):
+    def __init__(self, parent, position, size):
+        self.parent = parent
+        self.position = position
+        self.size = size
+        self.window = self.parent.derwin(*(self.size + self.position))
+
+    def box(self, position=(), size=()):
+        if not position:
+            position = (0, 0)
+        if not size:
+            size = self.size
+        boxwin = Window(self.window, position, size)
+        boxwin.window.box()
+        return boxwin
 
 
-def box(window, position=(), size=()):
-    if not position:
-        position = (0, 0)
-    if not size:
-        size = window.getmaxyx()
-    subwin = window.derwin(*(size + position))
-    subwin.box()
+class Screen(Window):
+    def __init__(self, stdscr, size):
+        self.parent = stdscr
+        self.position = (0, 0)
+        self.size = size
+        self.window = curses.newwin(*(self.size + self.position))
+        self.dungeon = Window(self.window, (1, 0), (self.size[0]-3, self.size[1]))
+        self.dungeon.box()
 
+    def statusbar(self, player):
+        rows, cols = self.size
+        msg = center("Screen size: {} x {}\t"
+                     "Color support: {}\t"
+                     "RGB support: {}".format(
+                            cols, rows,
+                            curses.has_colors(),
+                            curses.can_change_color()),
+                     cols)
+        self.window.insstr(rows-1, 0, msg, curses.A_REVERSE)
 
-def message(window, text, *args, **kwargs):
-    msg = text.format(*args, **kwargs)
-    log.info(msg)
-    window.addnstr(0, 0, msg, window.getmaxyx()[1])
+    def message(self, text, *args, **kwargs):
+        msg = text.format(*args, **kwargs)
+        log.info(msg)
+        self.window.addnstr(0, 0, msg, self.size[1])

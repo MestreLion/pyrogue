@@ -86,17 +86,16 @@ def game(stdscr):
     curses.use_default_colors()
     curses.curs_set(False)
 
-    screen = curses.newwin(g.ROWS, g.COLS, 0, 0)  # x and y are swapped!
-    dungeon = screen.subwin(g.DROWS, g.DCOLS, 1, 0)
-    player = Player(g.PLAYERNAME, dungeon, g.DROWS / 2, g.DCOLS / 2)
+    screen = window.Screen(stdscr, (g.ROWS, g.COLS))
+    dungeon = screen.dungeon
+    drows, dcols = dungeon.size
+    player = Player(g.PLAYERNAME, dungeon, int(drows/2), int(dcols/2))
 
-    screen.clear()
-    window.message(screen, "Hello {}. Welcome to the Dungeons of Doom",
+    screen.message("Hello {}. Welcome to the Dungeons of Doom",
                    player.name)
-    window.box(dungeon)
-    screen.addch(player.row, player.col, player.char)
-    window.statusbar(screen, player)
+    dungeon.window.addch(player.row, player.col, player.char)
+    screen.statusbar(player)
 
-    screen.refresh()
-    screen.getkey()
+    screen.window.refresh()
+    screen.window.getkey()
     curses.flushinp()
