@@ -24,15 +24,59 @@ log = logging.getLogger(__name__)
 
 
 class Player(object):
+
+    # Constants
+    char    =  "@"  # Display character
+    ac      =    1  # Armor Class when wearing no armor
+
+    stomach = 2000  # Stomach size, how much food can the player have
+    hunger  =  150  # Food left for hunger effects: 2*hunger=Hungry, 1*hunger=Weak
+    starve  = -850  # Food deficit (below 0) to die of starvation
+
+    hungerstages = ((hunger * 2, ""),  # All fine :)
+                    (hunger,     "Hungry"),
+                    (1,          "Weak"),
+                    (starve,     "Faint"))
+
     def __init__(self, name, dungeon, row=0, col=0):
         self.name = name
         self.dungeon = dungeon
 
-        self.char = "@"
-
         self.row = row
         self.col = col
+
+        self.armor     = None  # Worn armor
+        self.weapon    = None  # Wielded weapon
+        self.ringright = None  # Ring on right hand
+        self.ringleft  = None  # Ring on left hand
+        self.pack      = []    # Inventory (list of items)
+
+        self.hp      = 12      # Current hit points left (life)
+        self.hpmax   = 12      # Maximum hit points
+        self.str     = 16      # Current strength
+        self.strmax  = 16      # Maximum strength
+        self.gold    = 0       # Gold (purse)
+        self.xp      = 0       # Experience points
+        self.xplevel = 1       # Experience level
+        self.food    = 1300    # Food left in stomach. 1250 in Unix, 1300+/-10% in DOS
+
         self.move(0, 0)
 
+    @property
+    def armorclass(self):
+        if self.armor is None:
+            return self.ac
+        else:
+            return self.armor.ac
+
+    @property
+    def hungerstage(self):
+        for food, stage in self.hungerstages:
+            if self.food >= food:
+                return stage
+        else:
+            return "?"
+
     def move(self, dr, dc):
-        self.dungeon.move(self, dr, dc)
+        if self.dungeon.move(self, dr, dc):
+            self.food -= 1

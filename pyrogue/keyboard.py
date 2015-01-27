@@ -33,19 +33,17 @@ if os.environ.get('DISPLAY') is None:
         NUMLOCK = 0x02
         CAPLOCK = 0x04
 
+        leds = 0
         try:
             fd = os.open(DEVICE, os.O_WRONLY)
-        except IOError:
-            return (False,
-                    False,
-                    False)
+            bytes = fcntl.ioctl(fd, KDGETLED, struct.pack('I', 0))
+            [leds] = struct.unpack('I', bytes)
+        except IOError:  # not a true tty console, but an X11 terminal emulator
+            pass
 
-        bytes = fcntl.ioctl(fd, KDGETLED, struct.pack('I', 0))
-        [leds] = struct.unpack('I', bytes)
-
-        return (bool(leds & SCRLOCK),
-                bool(leds & NUMLOCK),
-                bool(leds & CAPLOCK))
+        return (("NUM LOCK", bool(leds & NUMLOCK)),
+                ("CAP LOCK", bool(leds & CAPLOCK)),
+                ("SCR LOCK", bool(leds & SCRLOCK)))
 
 
 else:
@@ -68,9 +66,9 @@ else:
         except subprocess.CalledProcessError:
             pass
 
-        return (bool(leds & SCRLOCK),
-                bool(leds & NUMLOCK),
-                bool(leds & CAPLOCK))
+        return (("NUM LOCK", bool(leds & NUMLOCK)),
+                ("CAP LOCK", bool(leds & CAPLOCK)),
+                ("SCR LOCK", bool(leds & SCRLOCK)))
 
 
 def set_term():

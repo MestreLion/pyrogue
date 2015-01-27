@@ -111,6 +111,7 @@ def game(stdscr):
 
     while True:
         screen.statusbar(player)
+        screen.systembar()
         dungeon.window.move(player.row, player.col)
         screen.window.refresh()
 
@@ -127,4 +128,5 @@ def game(stdscr):
         elif ch in (curses.KEY_NPAGE, ord('n')): player.move( 1,  1)  # Down Right
         elif ch in (curses.KEY_HOME,  ord('y'), curses.KEY_FIND):   player.move(-1, -1)  # Up Left
         elif ch in (curses.KEY_END,   ord('b'), curses.KEY_SELECT): player.move( 1, -1)  # Down Left
-        screen.message("Ch={}, up={}, player at ({}, {})", ch, curses.KEY_UP, player.row, player.col)
+        screen.message("Ch={}, player at ({}, {}), food is {}",
+                       ch, player.row, player.col, player.food)

@@ -18,7 +18,10 @@
 '''Window-related functions'''
 
 import logging
+import time
 import curses
+
+from . import keyboard
 
 
 log = logging.getLogger(__name__)
@@ -59,7 +62,7 @@ class Window(object):
             col < 1 or
             row > mr - 2 or
             col > mc - 2):
-            return
+            return False
 
         # Erase previous
         self.window.addch(object.row, object.col, ' ')
@@ -68,6 +71,7 @@ class Window(object):
         object.row = row
         object.col = col
         self.window.addch(row, col, object.char)
+        return True
 
 
 class Screen(Window):
@@ -83,15 +87,56 @@ class Screen(Window):
         self.dungeon.box()
 
     def statusbar(self, player):
-        rows, cols = self.size
-        msg = center("Screen size: {} x {}\t"
-                     "Color support: {}\t"
-                     "RGB support: {}".format(
-                            cols, rows,
-                            curses.has_colors(),
-                            curses.can_change_color()),
-                     cols)
-        self.window.insstr(rows-1, 0, msg, curses.A_REVERSE)
+        level = 1
+        # Formatting rationale: all attributes should touch the ':' when
+        # at their *typical* value, hence the {:2d} in Level, Hits, Str, etc
+        # Gold and XP will always increase line width when up a new power of 10
+        # So will the uncommon Armor >= 10 and Hits >= 100
+        msg = ("Level:{:2d}\t"
+               "Hits:{:2d}({:2d})\t"
+               "Str:{:2d}({:2d})\t"
+               "Gold:{}\t"
+               "Armor:{}\t"
+               "Exp:{:2d}/{}".format(
+                level,
+                player.hp,
+                player.hpmax,
+                player.str,
+                player.strmax,
+                player.gold,
+                player.armorclass,
+                player.xplevel,
+                player.xp)).replace('\t', 3 * ' ')
+        self.window.addstr(self.size[0]-2, 0, msg)
+
+        row, col = self.size[0] - 1, 60
+        self.window.addstr(row, col, 10 * ' ')
+        hungerstage = player.hungerstage
+        if hungerstage:
+            self.window.addstr(row, col, hungerstage, curses.A_REVERSE)
+
+    def systembar(self):
+        row, cols = (self.size[0]-1, self.size[1])
+
+        # Terminal capabilities (temporary)
+        msg = ("Color:{:5}  "
+               "RGB:{:5}".format(
+                str(curses.has_colors()),
+                str(curses.can_change_color())))
+        self.window.addstr(row, 0, msg, curses.A_REVERSE)
+
+        # Keyboard Scroll/Num/Caps Lock led status
+        for i, (led, on) in enumerate(keyboard.leds()):
+            self.window.move(row, 26 + 9 * i)
+            if on:
+                self.window.addstr(led, curses.A_REVERSE)
+            else:
+                self.window.addstr(9 * ' ')
+
+        # Current time
+        msg = time.strftime("%H:%M")
+        self.window.insstr(row, cols - len(msg), msg, curses.A_REVERSE)
+
 
     def message(self, text, *args, **kwargs):
         msg = text.format(*args, **kwargs).replace('\n', '\\n').replace('\0', '\\0')
