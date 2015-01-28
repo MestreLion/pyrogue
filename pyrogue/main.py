@@ -18,7 +18,7 @@
 '''Main module and entry point'''
 
 import os
-import logging
+import logging.handlers
 import argparse
 import curses
 
@@ -39,16 +39,6 @@ def parseargs(argv=None):
     parser = argparse.ArgumentParser(
         description="Python port of the PC-DOS classic game Rogue")
 
-    parser.add_argument('--quiet', '-q', dest='loglevel',
-                        const=logging.WARNING, default=logging.INFO,
-                        action="store_const",
-                        help="Suppress informative messages.")
-
-    parser.add_argument('--verbose', '-v', dest='loglevel',
-                        const=logging.DEBUG,
-                        action="store_const",
-                        help="Verbose mode, output extra info.")
-
     parser.add_argument('savegame', nargs='?',
                         help="Save game file to load.")
 
@@ -57,29 +47,47 @@ def parseargs(argv=None):
     return args
 
 
+def setuplogging():
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)  # must be the lowest
+
+    # Console output (stderr)
+    sh = logging.StreamHandler()
+    sh.setLevel(logging.WARNING)  # default
+    sh.setFormatter(logging.Formatter(fmt="%(message)s"))
+
+    # Rotating log file (10 x 1MB)
+    fh = logging.handlers.RotatingFileHandler(
+        filename=os.path.join(g.CONFIGDIR, "{}.log".format(g.APPNAME)),
+        maxBytes=2**20,
+        backupCount=10,
+        delay=True)
+    fh.setLevel(logging.DEBUG)
+    fh.setFormatter(logging.Formatter(
+        fmt="[%(levelname)-8s] %(asctime)s %(module)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S"))
+
+    logger.addHandler(fh)
+    logger.addHandler(sh)
+
+
 def main(argv=None):
     '''App entry point
         <argv>: list of command line arguments, defaults to sys.argv[1:]
     '''
     args = parseargs(argv)
-
-    logging.basicConfig(
-        level=args.loglevel,
-        format="[%(levelname)-8s] %(asctime)s %(module)s: %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-        filename=os.path.join(g.CONFIGDIR, "{}.log".format(g.APPNAME))
-    )
+    setuplogging()
 
     keyboard.set_term()
 
     try:
-        curses.wrapper(game)
+        curses.wrapper(game, args)
         curses.flushinp()
     except GameError as e:
         log.error(e)
 
 
-def game(stdscr):
+def game(stdscr, args):
     cols = getattr(curses, 'COLS',  0)
     rows = getattr(curses, 'LINES', 0)
     log.info("Terminal size: %d x %d", cols, rows)

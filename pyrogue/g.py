@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
 
 # General
 VERSION = "0.1"
-APPNAME = 'pyrogue'
+APPNAME = __package__
 
 # Paths
 GAMEDIR = os.path.abspath(os.path.dirname(__file__) or '.')
