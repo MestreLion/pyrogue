@@ -60,9 +60,28 @@ class Window(object):
             position = (0, 0)
         if not size:
             size = self.size
-        boxwin = Window(self.window, position, size)
-        boxwin.window.box()
-        return boxwin
+
+        # curses.box() requires byte chars in 0-255 range, unicode not supported.
+        # So must draw the box manually
+
+        srow, scol = position
+        erow, ecol = (position[0] + size[0] - 1,
+                      position[1] + size[1] - 1)
+
+        # Horizontal walls
+        self.window.addstr(srow, scol + 1, '\u2550' * (size[1]-2))  # CP437 0xCD, ═, HWall
+        self.window.addstr(erow, scol + 1, '\u2550' * (size[1]-2))
+
+        # Vertical walls
+        for row in range(srow + 1, erow):
+            self.window.addstr(row, scol, '\u2551')  # CP437 0xBA, ║, VWall
+            self.window.addstr(row, ecol, '\u2551')
+
+        # Corners
+        self.window.addstr(srow, scol, '\u2554')  # CP437 0xC9, ╔, UL
+        self.window.addstr(srow, ecol, '\u2557')  # CP437 0xBB, ╗, UR
+        self.window.addstr(erow, scol, '\u255A')  # CP437 0xC8, ╚, LL
+        self.window.insstr(erow, ecol, '\u255D')  # CP437 0xBC, ╝, LR
 
     def move(self, object, dr, dc):
         row = object.row + dr
