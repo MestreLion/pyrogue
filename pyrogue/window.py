@@ -17,15 +17,27 @@
 
 '''Window-related functions'''
 
+import sys
 import logging
 import time
 import curses
+import locale
 
 from . import keyboard
 
 
-log = logging.getLogger(__name__)
 
+log = logging.getLogger(__name__)
+locale.setlocale(locale.LC_ALL, '')
+
+if sys.version < '3':
+    import codecs
+    def u(x):
+        return (codecs.unicode_escape_decode(x)[0].
+            encode(locale.getpreferredencoding()))
+else:
+    def u(x):
+        return x
 
 def left(  text, width, fill=' '): return align(text, width, fill, "<")
 def center(text, width, fill=' '): return align(text, width, fill, "^")
@@ -127,11 +139,12 @@ class Screen(Window):
 
         # Keyboard Scroll/Num/Caps Lock led status
         for i, (led, on) in enumerate(keyboard.leds()):
-            self.window.move(row, 26 + 9 * i)
+            width = len(led)
+            self.window.move(row, 26 + width * i)
             if on:
                 self.window.addstr(led, curses.A_REVERSE)
             else:
-                self.window.addstr(9 * ' ')
+                self.window.addstr(width * ' ')
 
         # Current time
         msg = time.strftime("%H:%M")
