@@ -97,7 +97,23 @@ def game(stdscr, args):
                         " current is {} x {}".format(
                         g.APPNAME, g.COLS, g.ROWS, cols, rows))
 
+    if not curses.has_colors():
+        raise GameError("{} requires a color terminal")
+
     curses.use_default_colors()
+
+    # Setup basic color pairs: each curses named color with default background
+    for color in window.COLOR:  #curses.COLORS):  # @UndefinedVariable
+        if not color == window.COLOR.DEFAULT:
+            curses.init_pair(color, color, -1)
+            window.colors[color] = curses.color_pair(color)
+
+    # Some adjustments:
+    #curses.init_pair(max(window.COLOR) + 1, -1, -1)
+    #window.colors[window.COLOR.DEFAULT] = curses.color_pair(max(window.COLOR) + 1)
+    window.colors[window.COLOR.BROWN] = window.colors[window.COLOR.YELLOW]
+    window.colors[window.COLOR.YELLOW] |= curses.A_BOLD
+
 
     # Cursor: 0=invisible, 1=normal (underline), 2="very visible" (block)
     # Normal cursor is only available in real consoles, X11-based ones
@@ -111,8 +127,8 @@ def game(stdscr, args):
     dungeon = screen.dungeon
     player = Player(g.PLAYERNAME,
                     dungeon,
-                    int(dungeon.size[0] / 2),
-                    int(dungeon.size[1] / 2))
+                    int((dungeon.size[0] - 2) / 2),
+                    int((dungeon.size[1] - 2) / 2))
 
     screen.message("Hello {}. Welcome to the Dungeons of Doom",
                    player.name)

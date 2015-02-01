@@ -18,6 +18,8 @@
 '''Window-related functions'''
 
 import sys
+import operator
+import functools
 import logging
 import time
 import curses
@@ -25,6 +27,10 @@ import locale
 
 from . import keyboard
 
+try:
+    import enum
+except ImportError:
+    from . import enum
 
 
 log = logging.getLogger(__name__)
@@ -39,13 +45,61 @@ else:
     def u(x):
         return x
 
+
+class COLOR(enum.Enum):
+    DEFAULT = -1  # Terminal default. Actual color depends on context, fg/bg
+    BLACK   =  0  # Background
+    RED     =  1
+    GREEN   =  2
+    YELLOW  =  3
+    BLUE    =  4  # DOS: Light Blue
+    MAGENTA =  5
+    BROWN   =  6  # 6 is CYAN in curses
+    WHITE   =  7
+
+# CP437 codes comes from rogue.h @ DEFINEs,
+# Colors from curses.c @ color_attr[] and addch(chr)
+chars = {
+    '@': ('@', u('\u263A'), 0x01, COLOR.YELLOW),   # ☺, Player
+    '^': ('^', u('\u2666'), 0x04, COLOR.MAGENTA),  # ♦, Trap
+    ':': (':', u('\u2663'), 0x05, COLOR.RED),      # ♣, Food
+    ']': (']', u('\u25D8'), 0x08, COLOR.BLUE),     # ◘, Armor
+    '=': ('=', u('\u25CB'), 0x09, COLOR.BLUE),     # ○, Ring
+    ',': (',', u('\u2640'), 0x0C, COLOR.BLUE),     # ♀, Amulet
+    '?': ('?', u('\u266A'), 0x0D, COLOR.BLUE),     # ♪, Scroll
+    '*': ('*', u('\u263C'), 0x0F, COLOR.YELLOW),   # ☼, Gold
+    ')': (')', u('\u2191'), 0x18, COLOR.BLUE),     # ↑, Weapon
+    '!': ('!', u('\u00A1'), 0xAD, COLOR.BLUE),     # ¡, Potion
+    '#': ('#', u('\u2591'), 0xB1, COLOR.WHITE),    # ░, Passage (Corridor/Tunnel)
+    '+': ('+', u('\u256C'), 0xCE, COLOR.BROWN),    # ╬, Door
+    '/': ('/', u('\u03C4'), 0xE7, COLOR.BLUE),     # τ, Stick (Staff/Wand/Rod)
+    '.': ('.', u('\u00B7'), 0xFA, COLOR.GREEN,     # ·, Floor
+          curses.A_BOLD),
+    '%': ('%', u('\u2261'), 0xF0, COLOR.GREEN,     # ≡, Stairs
+          curses.A_REVERSE | curses.A_BLINK),      #    DOS: color 160, black on green
+
+    '|': ('|', u('\u2551'), 0xBA, COLOR.BROWN),    # ║, V Wall
+    '-': ('-', u('\u2550'), 0xCD, COLOR.BROWN),    # ═, H Wall
+    '1': ('-', u('\u2554'), 0xC9, COLOR.BROWN),    # ╔, UL corner
+    '2': ('-', u('\u2557'), 0xBB, COLOR.BROWN),    # ╗, UR corner
+    '3': ('-', u('\u255A'), 0xC8, COLOR.BROWN),    # ╚, LL corner
+    '4': ('-', u('\u255D'), 0xBC, COLOR.BROWN),    # ╝, LR corner
+
+    '$': ('$', '$',         0x24, COLOR.WHITE),    # Magic (Good)
+    '&': ('&', '+',         0x26, COLOR.WHITE),    # Magic (Bad)
+
+    ' ': (' ', ' ',         0x20, COLOR.BLACK),    # Background
+}
+
+colors = {}  # To be initialized after curses
+
+
 def left(  text, width, fill=' '): return align(text, width, fill, "<")
 def center(text, width, fill=' '): return align(text, width, fill, "^")
 def right( text, width, fill=' '): return align(text, width, fill, ">")
 def align( text, width, fill, align):
     return "{0:{1}{2}{3}}".format(text.replace("\t", 4 * " "),
                                   fill, align, width)
-
 
 class Window(object):
     def __init__(self, parent, position, size):
@@ -69,19 +123,26 @@ class Window(object):
                       position[1] + size[1] - 1)
 
         # Horizontal walls
-        self.window.addstr(srow, scol + 1, '\u2550' * (size[1]-2))  # CP437 0xCD, ═, HWall
-        self.window.addstr(erow, scol + 1, '\u2550' * (size[1]-2))
+        char, attrs = self.charattrs("-")
+        self.window.addstr(srow, scol + 1, char * (size[1]-2), attrs)
+        self.window.addstr(erow, scol + 1, char * (size[1]-2), attrs)
 
-        # Vertical walls
+        # Vertical walls and floor
+        char, attrs = self.charattrs("|")
         for row in range(srow + 1, erow):
-            self.window.addstr(row, scol, '\u2551')  # CP437 0xBA, ║, VWall
-            self.window.addstr(row, ecol, '\u2551')
+            self.window.addstr(row, scol, char, attrs)
+            self.window.addstr(row, ecol, char, attrs)
 
         # Corners
-        self.window.addstr(srow, scol, '\u2554')  # CP437 0xC9, ╔, UL
-        self.window.addstr(srow, ecol, '\u2557')  # CP437 0xBB, ╗, UR
-        self.window.addstr(erow, scol, '\u255A')  # CP437 0xC8, ╚, LL
-        self.window.insstr(erow, ecol, '\u255D')  # CP437 0xBC, ╝, LR
+        self.window.addstr(srow, scol, *self.charattrs("1"))
+        self.window.addstr(srow, ecol, *self.charattrs("2"))
+        self.window.addstr(erow, scol, *self.charattrs("3"))
+        self.window.insstr(erow, ecol, *self.charattrs("4"))
+
+        # Floor
+        for row in range(srow + 1, erow):
+            for col in range(scol + 1, ecol):
+                self.window.addstr(row, col, *self.charattrs('.'))
 
     def move(self, object, dr, dc):
         row = object.row + dr
@@ -96,13 +157,18 @@ class Window(object):
             return False
 
         # Erase previous
-        self.window.addch(object.row, object.col, ' ')
+        self.window.addstr(object.row, object.col, *self.charattrs('.'))
 
         # Set new
         object.row = row
         object.col = col
-        self.window.addch(row, col, object.char)
+        self.window.addstr(row, col, *self.charattrs(object.char))
         return True
+
+    def charattrs(self, char):
+        if char in chars:
+            c = chars[char]
+            return c[1], functools.reduce(operator.or_, c[4:], colors[c[3]])
 
 
 class Screen(Window):
@@ -114,8 +180,18 @@ class Screen(Window):
         if self.size != self.window.getmaxyx():
             self.window.resize(*size)
 
-        self.dungeon = Window(self.window, (1, 0), (self.size[0]-3, self.size[1]))
+        self.dungeon = Window(self.window, (4, 0), (self.size[0]-6,
+                                                    self.size[1]))
         self.dungeon.box()
+
+        # Upper box - chars showcase
+        self.box((1, 0), (3, self.size[1]))
+        text = center("".join([' {} '.format(_)
+                               for _ in sorted(chars,
+                                               key=lambda _: chars[_][2])]),
+                      self.size[1] - 2)
+        for col, char in enumerate(text, 1):
+            self.window.addstr(2, col, *self.charattrs(char))
 
     def statusbar(self, player):
         level = 1
@@ -138,7 +214,7 @@ class Screen(Window):
                 player.armorclass,
                 player.xplevel,
                 player.xp)).replace('\t', 3 * ' ')
-        self.window.addstr(self.size[0]-2, 0, msg)
+        self.window.addstr(self.size[0]-2, 0, msg, colors[COLOR.YELLOW] | curses.A_BOLD)
 
         row, col = self.size[0] - 1, 60
         self.window.addstr(row, col, 10 * ' ')
