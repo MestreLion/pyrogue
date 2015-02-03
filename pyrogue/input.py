@@ -15,15 +15,37 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program. See <http://www.gnu.org/licenses/gpl.html>
 
-'''Environment-dependent keyboard and terminal functions'''
+'''
+Abstraction layer to deal with terminal keyboard input
+and related curses methods and constants
+'''
 
 import os
+import curses
+
+from . import enum
+
+
+class MOVE(enum.Enum):
+    UP         = (curses.KEY_UP,    ord('k'))
+    DOWN       = (curses.KEY_DOWN,  ord('j'))
+    LEFT       = (curses.KEY_LEFT,  ord('h'))
+    RIGHT      = (curses.KEY_RIGHT, ord('l'))
+    UP_RIGHT   = (curses.KEY_PPAGE, ord('u'))
+    DOWN_RIGHT = (curses.KEY_NPAGE, ord('n'))
+    UP_LEFT    = (curses.KEY_HOME,  ord('y'), curses.KEY_FIND)
+    DOWN_LEFT  = (curses.KEY_END,   ord('b'), curses.KEY_SELECT)
+
+
+def getch(window):
+    return window.window.getch()
+
 
 if os.environ.get('DISPLAY') is None:
 
     is_console = True
 
-    def leds():
+    def keyboard_leds():
         import struct
         import fcntl
 
@@ -50,7 +72,7 @@ else:
 
     is_console = False
 
-    def leds():
+    def keyboard_leds():
         import subprocess
 
         SCRLOCK = 0x04

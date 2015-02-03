@@ -17,10 +17,10 @@
 
 '''Game load and play'''
 
-import curses as c  # only for input constants
-
 from . import g
+from . import input
 from .player import Player
+
 
 class Game(object):
 
@@ -87,19 +87,19 @@ class Level(object):
         while True:
             self.screen.update(self.player)
 
-            ch = self.screen.dungeon.window.getch()
+            ch = input.getch(self.screen.dungeon)
 
             if ch == ord('Q'):
                 break
 
-            elif ch in (c.KEY_LEFT,  ord('h')): self.player.move( 0, -1)  # Left
-            elif ch in (c.KEY_DOWN,  ord('j')): self.player.move( 1,  0)  # Down
-            elif ch in (c.KEY_UP,    ord('k')): self.player.move(-1,  0)  # Up
-            elif ch in (c.KEY_RIGHT, ord('l')): self.player.move( 0,  1)  # Right
-            elif ch in (c.KEY_PPAGE, ord('u')): self.player.move(-1,  1)  # Up Right
-            elif ch in (c.KEY_NPAGE, ord('n')): self.player.move( 1,  1)  # Down Right
-            elif ch in (c.KEY_HOME,  ord('y'), c.KEY_FIND):   self.player.move(-1, -1)  # Up Left
-            elif ch in (c.KEY_END,   ord('b'), c.KEY_SELECT): self.player.move( 1, -1)  # Down Left
+            elif ch in input.MOVE.LEFT:       self.player.move( 0, -1)  # Left
+            elif ch in input.MOVE.DOWN:       self.player.move( 1,  0)  # Down
+            elif ch in input.MOVE.UP:         self.player.move(-1,  0)  # Up
+            elif ch in input.MOVE.RIGHT:      self.player.move( 0,  1)  # Right
+            elif ch in input.MOVE.UP_RIGHT:   self.player.move(-1,  1)  # Up Right
+            elif ch in input.MOVE.DOWN_RIGHT: self.player.move( 1,  1)  # Down Right
+            elif ch in input.MOVE.UP_LEFT:    self.player.move(-1, -1)  # Up Left
+            elif ch in input.MOVE.DOWN_LEFT:  self.player.move( 1, -1)  # Down Left
             self.screen.message("Ch={}, player at ({}, {}), food is {}", "",
                                 ch,
                                 self.player.row,
