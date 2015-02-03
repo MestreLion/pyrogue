@@ -38,7 +38,7 @@ class Player(object):
                     (1,          "Weak"),
                     (starve,     "Faint"))
 
-    def __init__(self, name, dungeon, row=0, col=0):
+    def __init__(self, name, dungeon=None, row=0, col=0):
         self.name = name
         self.dungeon = dungeon
 
@@ -59,8 +59,6 @@ class Player(object):
         self.xp      = 0       # Experience points
         self.xplevel = 1       # Experience level
         self.food    = 1300    # Food left in stomach. 1250 in Unix, 1300+/-10% in DOS
-
-        self.move(0, 0)
 
     @property
     def armorclass(self):

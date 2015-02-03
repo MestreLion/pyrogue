@@ -245,8 +245,14 @@ class Screen(Window):
         msg = time.strftime("%H:%M")
         self.window.insstr(row, cols - len(msg), msg, curses.A_REVERSE)
 
-
-    def message(self, text, *args, **kwargs):
+    def message(self, terse, noterse="", *args, **kwargs):
+        text = terse + noterse  # for now...
         msg = text.format(*args, **kwargs).replace('\n', '\\n').replace('\0', '\\0')
         log.info(msg)
         self.window.addnstr(0, 0, left(msg, self.size[1]), self.size[1])
+
+    def update(self, player):
+        self.statusbar(player)
+        self.systembar()
+        self.dungeon.window.move(player.row, player.col)
+        self.window.refresh()
