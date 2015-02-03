@@ -144,9 +144,9 @@ class Window(object):
             for col in range(scol + 1, ecol):
                 self.window.addstr(row, col, *self.charattrs('.'))
 
-    def move(self, object, dr, dc):
-        row = object.row + dr
-        col = object.col + dc
+    def move(self, obj, dr, dc):
+        row = obj.row + dr
+        col = obj.col + dc
         mr, mc = self.size
 
         # Account for walls on edges
@@ -157,12 +157,12 @@ class Window(object):
             return False
 
         # Erase previous
-        self.window.addstr(object.row, object.col, *self.charattrs('.'))
+        self.window.addstr(obj.row, obj.col, *self.charattrs('.'))
 
         # Set new
-        object.row = row
-        object.col = col
-        self.window.addstr(row, col, *self.charattrs(object.char))
+        obj.row = row
+        obj.col = col
+        self.window.addstr(row, col, *self.charattrs(obj.char))
         return True
 
     def charattrs(self, char):

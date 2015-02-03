@@ -58,8 +58,8 @@ if os.environ.get('DISPLAY') is None:
         leds = 0
         try:
             fd = os.open(DEVICE, os.O_WRONLY)
-            bytes = fcntl.ioctl(fd, KDGETLED, struct.pack('I', 0))
-            [leds] = struct.unpack('I', bytes)
+            retbytes = fcntl.ioctl(fd, KDGETLED, struct.pack('I', 0))
+            [leds] = struct.unpack('I', retbytes)
         except IOError:  # not a true tty console, but an X11 terminal emulator
             pass
 
