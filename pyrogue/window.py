@@ -25,7 +25,7 @@ import time
 import curses
 import locale
 
-from . import keyboard
+from . import input
 
 try:
     import enum
@@ -233,7 +233,7 @@ class Screen(Window):
         self.window.addstr(row, 0, msg, curses.A_REVERSE)
 
         # Keyboard Scroll/Num/Caps Lock led status
-        for i, (led, on) in enumerate(keyboard.leds()):
+        for i, (led, on) in enumerate(input.leds()):
             width = len(led)
             self.window.move(row, 26 + width * i)
             if on:

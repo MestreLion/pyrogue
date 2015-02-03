@@ -24,7 +24,7 @@ import curses
 
 from . import g
 from . import window
-from . import keyboard
+from . import input
 
 from .game   import Game
 
@@ -79,7 +79,7 @@ def main(argv=None):
     args = parseargs(argv)
     setuplogging()
 
-    keyboard.set_term()
+    input.set_term()
 
     try:
         curses.wrapper(init, args)
@@ -119,7 +119,7 @@ def init(stdscr, args):
     # Cursor: 0=invisible, 1=normal (underline), 2="very visible" (block)
     # Normal cursor is only available in real consoles, X11-based ones
     # are always block
-    if keyboard.is_console:
+    if input.is_console:
         curses.curs_set(1)
     else:
         curses.curs_set(0)
