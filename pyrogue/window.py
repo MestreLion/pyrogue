@@ -243,7 +243,7 @@ class Screen(Window):
 
         # Current time
         msg = time.strftime("%H:%M")
-        self.window.insstr(row, cols - len(msg), msg, curses.A_REVERSE)
+        self.window.addstr(row, cols - len(msg) - 1, msg, curses.A_REVERSE)
 
     def message(self, terse, noterse="", *args, **kwargs):
         text = terse + noterse  # for now...
