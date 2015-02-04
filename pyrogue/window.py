@@ -101,6 +101,7 @@ def align( text, width, fill, align):
     return "{0:{1}{2}{3}}".format(text.replace("\t", 4 * " "),
                                   fill, align, width)
 
+
 class Window(object):
     def __init__(self, parent, position, size):
         self.parent = parent
@@ -214,7 +215,7 @@ class Screen(Window):
                 player.armorclass,
                 player.xplevel,
                 player.xp)).replace('\t', 3 * ' ')
-        self.window.addstr(self.size[0]-2, 0, msg, colors[COLOR.YELLOW] | curses.A_BOLD)
+        self.window.addstr(self.size[0]-2, 0, msg, colors[COLOR.YELLOW])
 
         row, col = self.size[0] - 1, 60
         self.window.addstr(row, col, 10 * ' ')

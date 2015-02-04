@@ -113,7 +113,8 @@ def init(stdscr, args):
     #curses.init_pair(max(window.COLOR) + 1, -1, -1)
     #window.colors[window.COLOR.DEFAULT] = curses.color_pair(max(window.COLOR) + 1)
     window.colors[window.COLOR.BROWN] = window.colors[window.COLOR.YELLOW]
-    window.colors[window.COLOR.YELLOW] |= curses.A_BOLD
+    window.colors[window.COLOR.YELLOW] |= curses.A_BOLD  # Yellow is Brown in curses (despite the name)
+    window.colors[window.COLOR.BLUE]   |= curses.A_BOLD  # Blue is Light blue in Rogue
 
 
     # Cursor: 0=invisible, 1=normal (underline), 2="very visible" (block)
