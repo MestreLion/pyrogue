@@ -102,6 +102,7 @@ class Level(object):
             self.screen.update(self.player)
 
             ch = input.getch(self.screen.dungeon)
+            self.screen.clear_message()
 
             if ch == ord('Q'):
                 break
@@ -114,8 +115,3 @@ class Level(object):
             elif ch in input.MOVE.DOWN_RIGHT: self.player.move( 1,  1)  # Down Right
             elif ch in input.MOVE.UP_LEFT:    self.player.move(-1, -1)  # Up Left
             elif ch in input.MOVE.DOWN_LEFT:  self.player.move( 1, -1)  # Down Left
-            self.screen.message("Ch={}, player at ({}, {}), food is {}", "",
-                                ch,
-                                self.player.row,
-                                self.player.col,
-                                self.player.food)

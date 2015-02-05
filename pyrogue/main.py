@@ -26,7 +26,7 @@ from . import g
 from . import window
 from . import input
 
-from .game   import Game
+from .game import Game
 
 
 log = logging.getLogger(__name__)

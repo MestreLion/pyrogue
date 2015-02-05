@@ -181,7 +181,7 @@ class Screen(Window):
         if self.size != self.window.getmaxyx():
             self.window.resize(*size)
 
-        self.dungeon = Window(self.window, (4, 0), (self.size[0]-6,
+        self.dungeon = Window(self.window, (4, 0), (self.size[0]-7,
                                                     self.size[1]))
         self.dungeon.box()
 
@@ -217,6 +217,14 @@ class Screen(Window):
                 player.xp)).replace('\t', 3 * ' ')
         self.window.addstr(self.size[0]-2, 0, msg, colors[COLOR.YELLOW])
 
+        # Extra, temporary status bar
+        msg = ("Food:{:4d}\t"
+               "Pos: ({:2d},{:2d})").format(
+                player.food,
+                player.row,
+                player.col)
+        self.window.addstr(self.size[0]-3, 0, msg)
+
         row, col = self.size[0] - 1, 60
         self.window.addstr(row, col, 10 * ' ')
         hungerstage = player.hungerstage
@@ -251,6 +259,10 @@ class Screen(Window):
         msg = text.format(*args, **kwargs).replace('\n', '\\n').replace('\0', '\\0')
         log.info(msg)
         self.window.addnstr(0, 0, left(msg, self.size[1]), self.size[1])
+
+    def clear_message(self):
+        self.window.move(0, 0)
+        self.window.clrtoeol()
 
     def update(self, player):
         self.statusbar(player)
