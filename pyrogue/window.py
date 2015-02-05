@@ -34,7 +34,6 @@ except ImportError:
 
 
 log = logging.getLogger(__name__)
-locale.setlocale(locale.LC_ALL, '')
 
 if sys.version < '3':
     import codecs

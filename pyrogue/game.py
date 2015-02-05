@@ -115,3 +115,6 @@ class Level(object):
             elif ch in input.MOVE.DOWN_RIGHT: self.player.move( 1,  1)  # Down Right
             elif ch in input.MOVE.UP_LEFT:    self.player.move(-1, -1)  # Up Left
             elif ch in input.MOVE.DOWN_LEFT:  self.player.move( 1, -1)  # Down Left
+
+            else:
+                self.screen.message("Illegal command '{}'", "", input.unctrl(ch))

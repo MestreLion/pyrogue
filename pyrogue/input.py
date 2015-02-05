@@ -21,9 +21,19 @@ and related curses methods and constants
 '''
 
 import os
+import sys
 import curses
+import locale
 
 from . import enum
+
+
+if sys.version < '3':
+    def b2s(b):
+        return b
+else:
+    def b2s(b):
+        return str(b, encoding=locale.getpreferredencoding())
 
 
 class MOVE(enum.Enum):
@@ -38,7 +48,19 @@ class MOVE(enum.Enum):
 
 
 def getch(window):
+    '''Get a character from user. Blocks until input.
+        Wrapper for curses.window.getch()
+    '''
     return window.window.getch()
+
+
+def unctrl(ch):
+    '''Return a a printable representation of character ch.
+        Control characters are displayed with a caret, for example ^C.
+        Printing characters are left as they are.
+        Wrapper for curses.unctrl()
+    '''
+    return b2s(curses.unctrl(ch))
 
 
 if os.environ.get('DISPLAY') is None:
@@ -81,7 +103,9 @@ else:
 
         leds = 0
         try:
-            for line in subprocess.check_output(["xset", "-q"]).decode().split('\n'):
+            for line in (subprocess.check_output(["xset", "-q"]).
+                         decode(locale.getpreferredencoding()).
+                         split('\n')):
                 if 'LED mask' in line:
                     leds = int(line.split(' ')[-1])
                     break

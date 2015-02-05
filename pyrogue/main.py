@@ -17,6 +17,9 @@
 
 '''Main module and entry point'''
 
+import locale
+locale.setlocale(locale.LC_ALL, '')
+
 import os
 import logging.handlers
 import argparse
