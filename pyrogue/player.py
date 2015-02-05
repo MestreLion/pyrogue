@@ -19,6 +19,7 @@
 
 import logging
 
+from . import rnd
 
 log = logging.getLogger(__name__)
 
@@ -58,7 +59,9 @@ class Player(object):
         self.gold    = 0       # Gold (purse)
         self.xp      = 0       # Experience points
         self.xplevel = 1       # Experience level
-        self.food    = 1300    # Food left in stomach. 1250 in Unix, 1300+/-10% in DOS
+
+        # Food left in stomach. Fixed 1250 in Unix
+        self.food    = rnd.spread(1300)
 
     @property
     def armorclass(self):

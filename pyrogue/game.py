@@ -19,18 +19,28 @@
 
 from . import g
 from . import input
+from . import rnd
+
 from .player import Player
 
 
 class Game(object):
 
     def __init__(self, screen):
-        self.screen = screen
-        self.player = None
-        self.level = None
+        self.screen = screen  # window.Screen instance to draw
+        self.player = None    # player.Player instance
+        self.level  = None    # Level instance of current level
+        self.rng    = None    # current RNG state, may be used on save/load
 
-    def new(self):
-        # initialize all names and materials, seed the random generator
+    def new(self, seed=None):
+        '''Initialize all names and materials, seed the random generator,
+            and start a new game in Level 1
+        '''
+        # For reproductible results, initialize the RNG before instancing
+        # any object, as Player and Level use the RNG in their initializations
+        rnd.seed(seed)
+        self.rng = rnd.get_state()
+
         self.player = Player(g.PLAYERNAME)
         self.level = Level(1, self.screen, self.player)
 
@@ -39,6 +49,10 @@ class Game(object):
 
     def load(self, savegame):
         # load file and set all attributes that new() does
+        rnd.seed()  # fake
+        state = rnd.get_state()  # also fake
+
+        rnd.set_state(state)
         self.player = Player("Loaded Game")
         self.level = Level(15, self.screen, self.player)
 
