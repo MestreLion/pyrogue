@@ -91,25 +91,3 @@ else:
         return (("NUM LOCK", bool(leds & NUMLOCK)),
                 ("CAP LOCK", bool(leds & CAPLOCK)),
                 ("SCR LOCK", bool(leds & SCRLOCK)))
-
-
-def set_term():
-    '''
-    Dirty hack to workaround gnome-terminal's wrong numpad HOME and END keys:
-    detect if we're running on gnome-terminal, and replace TERM environmental
-    variable prefix from 'xterm' to 'gnome'. This makes curses correctly
-    interpret the numpad HOME(7) and END(1) key codes sent by gnome-terminal.
-
-    Will not work with gnome-terminal v3.13 onwards, it does not set COLORTERM
-    anymore, which this rudimentary detection relies on.
-
-    By the time that version lands on downstream distro releases, I hope this
-    hack is not needed anymore. In any case, this is better done in a launcher
-    or by the user.
-
-    Must be done before initializing curses
-    '''
-    if (os.environ.get('TERM').startswith('xterm')
-        and os.environ.get('COLORTERM') == 'gnome-terminal'
-        and os.environ.get('XTERM_SHELL') is None):
-        os.environ['TERM'] = os.environ.get('TERM').replace('xterm', 'gnome', 1)

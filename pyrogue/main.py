@@ -79,7 +79,7 @@ def main(argv=None):
     args = parseargs(argv)
     setuplogging()
 
-    input.set_term()
+    log.debug("Initializing curses with TERM=%s", os.environ.get("TERM"))
 
     try:
         curses.wrapper(init, args)
@@ -116,10 +116,10 @@ def init(stdscr, args):
     window.colors[window.COLOR.YELLOW] |= curses.A_BOLD  # Yellow is Brown in curses (despite the name)
     window.colors[window.COLOR.BLUE]   |= curses.A_BOLD  # Blue is Light blue in Rogue
 
-
     # Cursor: 0=invisible, 1=normal (underline), 2="very visible" (block)
-    # Normal cursor is only available in real consoles, X11-based ones
-    # are always block
+    # Normal cursor is disabled by default in some X11 terminal emulators
+    # such as xterm and gnome-terminal, so we only enable it in "real"
+    # tty terminals consoles such as the Linux console
     if input.is_console:
         curses.curs_set(1)
     else:
