@@ -47,6 +47,15 @@ then
 	done
 fi
 
+if [[ "$ROGUETERM" == xterm ]]; then
+	for term in xterm{-256color,}; do
+		if has_terminfo "$term"; then
+			export TERM=$term
+			break
+		fi
+	done
+fi
+
 gamedir=$(dirname "$(readlink -f "$0")")
 
 cd "$gamedir"
