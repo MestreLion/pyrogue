@@ -89,6 +89,8 @@ def main(argv=None):
         curses.flushinp()
     except GameError as e:
         log.error(e)
+    except Exception as e:
+        log.critical(e, exc_info=1)
 
 
 def init(stdscr, args):

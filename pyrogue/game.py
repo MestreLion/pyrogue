@@ -18,6 +18,7 @@
 '''Game load and play'''
 
 import string
+import logging
 
 from . import g
 from . import input
@@ -25,6 +26,9 @@ from . import rnd
 from . import enum
 
 from .player import Player
+
+
+log = logging.getLogger(__name__)
 
 
 class TILE(enum.Enum):
