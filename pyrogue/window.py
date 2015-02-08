@@ -108,6 +108,7 @@ class Window(object):
         self.size = size
         self.window = self.parent.derwin(*(self.size + self.position))
         self.window.keypad(1)
+        log.debug("Window at %r, size %r", position, size)
 
     def box(self, position=(), size=()):
         if not position:
@@ -168,7 +169,6 @@ class Screen(Window):
 
         self.playarea = Window(self.window, (4, 0), (self.size[0]-7,
                                                      self.size[1]))
-        #self.dungeon.box()
 
         # Upper box - chars showcase
         self.box((1, 0), (3, self.size[1]))
@@ -228,8 +228,8 @@ class Screen(Window):
 
         # Keyboard Scroll/Num/Caps Lock led status
         for i, (led, on) in enumerate(input.keyboard_leds()):
-            width = len(led)
-            self.window.move(row, 26 + width * i)
+            width = len(led) + 1
+            self.window.move(row, 25 + width * i)
             if on:
                 self.window.addstr(led, curses.A_REVERSE)
             else:
