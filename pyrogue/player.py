@@ -39,12 +39,12 @@ class Player(object):
                     (1,          "Weak"),
                     (starve,     "Faint"))
 
-    def __init__(self, name, dungeon=None, row=0, col=0):
+    def __init__(self, name):
         self.name = name
-        self.dungeon = dungeon
 
-        self.row = row
-        self.col = col
+        self.level = None
+        self.row = 0
+        self.col = 0
 
         self.armor     = None  # Worn armor
         self.weapon    = None  # Wielded weapon
@@ -79,5 +79,19 @@ class Player(object):
             return "?"
 
     def move(self, dr, dc):
-        if self.dungeon.move(self, dr, dc):
-            self.food -= 1
+        row = self.row + dr
+        col = self.col + dc
+
+        if not self.level.is_passable(row, col):
+            return
+
+        # Update current tile
+        self.level.reveal(self.row, self.col)
+
+        # Update to new position
+        self.row = row
+        self.col = col
+        self.level.draw(self)
+
+        # After move consequences
+        self.food -= 1

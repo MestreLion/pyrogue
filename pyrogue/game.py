@@ -17,11 +17,92 @@
 
 '''Game load and play'''
 
+import string
+
 from . import g
 from . import input
 from . import rnd
+from . import enum
 
 from .player import Player
+
+
+class TILE(enum.Enum):
+    # FEATURES
+    STAIRS   = '%'
+    DOOR     = '+'
+    TRAP     = '^'
+
+    # PASSAGES
+    FLOOR    = '.'
+    TUNNEL   = '#'
+
+    # OBJECTS
+    ARMOR    = ']'
+    WEAPON   = ')'
+    SCROLL   = '?'
+    POTION   = "!"
+    GOLD     = '*'
+    FOOD     = ':'
+    STICK    = '/'
+    RING     = '='
+    AMULET   = ','
+
+    # WALLS
+    HORWALL  = '|'
+    VERTWALL = '-'
+    ULCORNER = '1'
+    URCORNER = '2'
+    LLCORNER = '3'
+    LRCORNER = '4'
+    NOTHING  = ' '
+
+    # Things you can walk on
+    # but not pick up or drop things on
+    FEATURE = {
+               STAIRS,
+               DOOR,
+               TRAP,
+    }
+
+    # Things you can walk on and pick up
+    # but not drop things on
+    OBJECT  = {
+               ARMOR,
+               WEAPON,
+               SCROLL,
+               POTION,
+               GOLD,
+               FOOD,
+               STICK,
+               RING,
+               AMULET,
+    }
+
+    # Things you can walk and drop things on,
+    # but not pick up
+    PASSAGE = {
+               FLOOR,
+               TUNNEL,
+    }
+
+    # Things you can not walk on - cancel move
+    # (and obviously not pick up or drop things onto)
+    WALL    = {
+               HORWALL,
+               VERTWALL,
+               ULCORNER,
+               URCORNER,
+               LLCORNER,
+               LRCORNER,
+               NOTHING,
+    }
+
+    # Can not walk on - initiate a fight
+    MONSTER = set(string.ascii_uppercase)
+
+# Add monsters
+[setattr(TILE, _, _) for _ in string.ascii_uppercase]
 
 
 class Game(object):
@@ -89,19 +170,25 @@ class Level(object):
         self.screen = screen
         self.player = player
 
+        rows, cols = self.screen.playarea.size
+        self.dungeon = rows * [cols * [TILE.FLOOR]]
+
         # create rooms, monsters, etc
 
         # position the player
-        self.player.dungeon = self.screen.dungeon
-        self.player.row = int((self.screen.dungeon.size[0] - 2) / 2)
-        self.player.col = int((self.screen.dungeon.size[1] - 2) / 2)
-        self.player.move(0, 0)
+        self.player.level = self
+        self.player.row = int((rows - 2) / 2)
+        self.player.col = int((cols - 2) / 2)
+        self.draw(self.player)
+        self.screen.playarea.draw(self.player.row,
+                                  self.player.col,
+                                  self.player.char)
 
     def play(self):
         while True:
             self.screen.update(self.player)
 
-            ch = input.getch(self.screen.dungeon)
+            ch = input.getch(self.screen.playarea)
             self.screen.clear_message()
 
             if ch == ord('Q'):
@@ -118,3 +205,16 @@ class Level(object):
 
             else:
                 self.screen.message("Illegal command '{}'", "", input.unctrl(ch))
+
+    def draw(self, thing):
+        '''Draw something at its current position'''
+        self.screen.playarea.draw(thing.row,
+                                  thing.col,
+                                  thing.char)
+
+    def reveal(self, row, col):
+        '''Draw tile char at (row, col)'''
+        self.screen.playarea.draw(row, col, self.dungeon[row][col])
+
+    def is_passable(self, row, col):
+        return self.dungeon[row][col] not in TILE.WALL

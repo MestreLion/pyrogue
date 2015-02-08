@@ -144,32 +144,13 @@ class Window(object):
             for col in range(scol + 1, ecol):
                 self.window.addstr(row, col, *self.charattrs('.'))
 
-    def move(self, obj, dr, dc):
-        row = obj.row + dr
-        col = obj.col + dc
-        mr, mc = self.size
-
-        # Account for walls on edges
-        if (row < 1 or
-            col < 1 or
-            row > mr - 2 or
-            col > mc - 2):
-            return False
-
-        # Erase previous
-        self.window.addstr(obj.row, obj.col, *self.charattrs('.'))
-
-        # Set new
-        obj.row = row
-        obj.col = col
-        self.window.addstr(row, col, *self.charattrs(obj.char))
-        return True
-
     def charattrs(self, char):
         if char in chars:
             c = chars[char]
             return c[1], functools.reduce(operator.or_, c[4:], colors[c[3]])
 
+    def draw(self, row, col, char):
+        self.window.addstr(row, col, *self.charattrs(char))
 
 class Screen(Window):
     def __init__(self, stdscr, size):
@@ -180,9 +161,9 @@ class Screen(Window):
         if self.size != self.window.getmaxyx():
             self.window.resize(*size)
 
-        self.dungeon = Window(self.window, (4, 0), (self.size[0]-7,
-                                                    self.size[1]))
-        self.dungeon.box()
+        self.playarea = Window(self.window, (4, 0), (self.size[0]-7,
+                                                     self.size[1]))
+        #self.dungeon.box()
 
         # Upper box - chars showcase
         self.box((1, 0), (3, self.size[1]))
@@ -266,5 +247,5 @@ class Screen(Window):
     def update(self, player):
         self.statusbar(player)
         self.systembar()
-        self.dungeon.window.move(player.row, player.col)
+        self.playarea.window.move(player.row, player.col)
         self.window.refresh()
