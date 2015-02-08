@@ -53,8 +53,8 @@ class TILE(enum.Enum):
     AMULET   = ','
 
     # WALLS
-    HORWALL  = '|'
-    VERTWALL = '-'
+    HORWALL  = '-'
+    VERTWALL = '|'
     ULCORNER = '1'
     URCORNER = '2'
     LLCORNER = '3'
@@ -178,6 +178,7 @@ class Level(object):
         self.dungeon = [[TILE.NOTHING] * self.cols for _ in range(self.rows)]
 
         # create rooms, monsters, etc
+        self.dig_dungeon()
 
         # position the player
         self.player.level = self
@@ -218,4 +219,48 @@ class Level(object):
         self.screen.playarea.draw(row, col, self.dungeon[row][col])
 
     def is_passable(self, row, col):
+        if not (0 <= row < self.rows and
+                0 <= col < self.cols):
+            log.warn("Trying to move outside bounds: %d, %d", row, col)
+            return False
+
         return self.dungeon[row][col] not in TILE.WALL
+
+    def dig_dungeon(self):
+        self.dig_room((0, 0),
+                      (self.rows, self.cols))
+        self.light_room()
+
+    def dig_room(self, topleft, size):
+        rows, cols = size
+        srow, scol = topleft
+        erow, ecol = (srow + rows - 1,  # bottom right
+                      scol + cols - 1)
+
+        log.debug("Digging room at %r, size %r: (%d, %d)-(%d, %d)",
+                  topleft, size, srow, scol, erow, ecol)
+
+        # Horizontal walls
+        for row in (srow, erow):
+            self.dungeon[row][scol + 1:ecol] = (cols - 2) * [TILE.HORWALL]
+
+        # Vertical walls
+        for col in (scol, ecol):
+            for row in range(srow + 1, erow):
+                self.dungeon[row][col] = TILE.VERTWALL
+
+        # Corners
+        self.dungeon[srow][scol] = TILE.ULCORNER
+        self.dungeon[srow][ecol] = TILE.URCORNER
+        self.dungeon[erow][scol] = TILE.LLCORNER
+        self.dungeon[erow][ecol] = TILE.LRCORNER
+
+        # Floor
+        for row in range(srow + 1, erow):
+            for col in range(scol + 1, ecol):
+                self.dungeon[row][col] = TILE.FLOOR
+
+    def light_room(self):
+        for row in range(self.rows):
+            for col in range(self.cols):
+                self.reveal(row, col)
