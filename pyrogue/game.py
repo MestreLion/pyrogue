@@ -174,19 +174,16 @@ class Level(object):
         self.screen = screen
         self.player = player
 
-        rows, cols = self.screen.playarea.size
-        self.dungeon = rows * [cols * [TILE.FLOOR]]
+        self.rows, self.cols = self.screen.playarea.size
+        self.dungeon = [[TILE.NOTHING] * self.cols for _ in range(self.rows)]
 
         # create rooms, monsters, etc
 
         # position the player
         self.player.level = self
-        self.player.row = int((rows - 2) / 2)
-        self.player.col = int((cols - 2) / 2)
+        self.player.row = int((self.rows - 2) / 2)
+        self.player.col = int((self.cols - 2) / 2)
         self.draw(self.player)
-        self.screen.playarea.draw(self.player.row,
-                                  self.player.col,
-                                  self.player.char)
 
     def play(self):
         while True:
