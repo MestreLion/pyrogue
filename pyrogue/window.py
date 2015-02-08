@@ -179,8 +179,7 @@ class Screen(Window):
         for col, char in enumerate(text, 1):
             self.window.addstr(2, col, *self.charattrs(char))
 
-    def statusbar(self, player):
-        level = 1
+    def statusbar(self, player, level):
         # Formatting rationale: all attributes should touch the ':' when
         # at their *typical* value, hence the {:2d} in Level, Hits, Str, etc
         # Gold and XP will always increase line width when up a new power of 10
@@ -203,11 +202,13 @@ class Screen(Window):
         self.window.addstr(self.size[0]-2, 0, msg, colors[COLOR.YELLOW])
 
         # Extra, temporary status bar
-        msg = ("Food:{:4d}\t"
-               "Pos: ({:2d},{:2d})").format(
+        msg = ("Food: {:4d}\t"
+               "Pos: ({:2d},{:2d})\t"
+               "Inventory: {}").format(
                 player.food,
                 player.row,
-                player.col)
+                player.col,
+                player.pack)
         self.window.addstr(self.size[0]-3, 0, msg)
 
         row, col = self.size[0] - 1, 60
@@ -251,8 +252,8 @@ class Screen(Window):
         self.window.move(0, 0)
         self.window.clrtoeol()
 
-    def update(self, player):
-        self.statusbar(player)
+    def update(self, player, level):
+        self.statusbar(player, level)
         self.systembar()
         self.playarea.window.move(player.row, player.col)
         self.window.refresh()

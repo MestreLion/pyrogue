@@ -30,6 +30,16 @@ from .player import Player
 
 log = logging.getLogger(__name__)
 
+MAXLEVEL = 99  # No such restriction in DOS
+
+
+class Win(Exception):
+    pass
+
+
+class Lose(Exception):
+    pass
+
 
 class TILE(enum.Enum):
     # FEATURES
@@ -112,10 +122,11 @@ class TILE(enum.Enum):
 class Game(object):
 
     def __init__(self, screen):
-        self.screen = screen  # window.Screen instance to draw
-        self.player = None    # player.Player instance
-        self.level  = None    # Level instance of current level
-        self.rng    = None    # current RNG state, may be used on save/load
+        self.screen   = screen  # window.Screen instance to draw
+        self.player   = None    # player.Player instance
+        self.level    = None    # Level instance of current level
+        self.rng      = None    # current RNG state, may be used on save/load
+        self.maxlevel = 0       # deepest level player has reached
 
     def new(self, seed=None):
         '''Initialize all names and materials, seed the random generator,
@@ -126,8 +137,9 @@ class Game(object):
         rnd.seed(seed)
         self.rng = rnd.get_state()
 
+        self.maxlevel = 1
         self.player = Player(g.PLAYERNAME)
-        self.level = Level(1, self.screen, self.player)
+        self.level = Level(self.maxlevel, self.screen, self.player)
 
         self.screen.message("Hello {}.".format(self.player.name),
                             " Welcome to the Dungeons of Doom")
@@ -139,33 +151,36 @@ class Game(object):
 
         rnd.set_state(state)
         self.player = Player("Loaded Game")
-        self.level = Level(15, self.screen, self.player)
+        self.maxlevel = 15
+        self.level = Level(self.maxlevel, self.screen, self.player)
 
         self.screen.message("Hello {}.".format(self.player.name),
                             " Welcome back to the Dungeons of Doom")
 
     def play(self):
         # wiring between levels
-        while True:
-            level = self.level.play()
+        try:
+            while True:
+                nextlevel = min(self.level.play(), MAXLEVEL)
+                if nextlevel == 0:
+                    raise Win()
 
-            if self.player.hp == 0:
-                self.death()
-                return
+                self.maxlevel = max(nextlevel, self.maxlevel)
+                self.level = Level(nextlevel, self.screen, self.player)
 
-            if level == 0:
-                self.win()
-                return
+        except Win as e:
+            self.win()
 
-            break  # single level, for now
-
-            self.level = Level(level, self.screen, self.player)
+        except Lose as e:
+            self.death(e)
 
     def win(self):
         self.screen.message("You win, congratulations!!")
+        input.getch(self.screen)
 
-    def death(self):
-        self.screen.message("You're dead!")
+    def death(self, msg=None):
+        self.screen.message("You're dead! {}".format(msg or "").rstrip())
+        input.getch(self.screen)
 
 
 class Level(object):
@@ -179,6 +194,8 @@ class Level(object):
 
         # create rooms, monsters, etc
         self.dig_dungeon()
+        self.put_stairs()
+        self.light_room()
 
         # position the player
         self.player.level = self
@@ -188,13 +205,13 @@ class Level(object):
 
     def play(self):
         while True:
-            self.screen.update(self.player)
+            self.screen.update(self.player, self.level)
 
             ch = input.getch(self.screen.playarea)
             self.screen.clear_message()
 
             if ch == ord('Q'):
-                break
+                raise Lose("Quit")
 
             elif ch in input.MOVE.LEFT:       self.player.move( 0, -1)  # Left
             elif ch in input.MOVE.DOWN:       self.player.move( 1,  0)  # Down
@@ -204,6 +221,14 @@ class Level(object):
             elif ch in input.MOVE.DOWN_RIGHT: self.player.move( 1,  1)  # Down Right
             elif ch in input.MOVE.UP_LEFT:    self.player.move(-1, -1)  # Up Left
             elif ch in input.MOVE.DOWN_LEFT:  self.player.move( 1, -1)  # Down Left
+
+            elif ch == ord('<'):
+                if self.check_stairs(down=False):
+                    return self.level - 1
+
+            elif ch == ord('>'):
+                if self.check_stairs(down=True):
+                    return self.level + 1
 
             else:
                 self.screen.message("Illegal command '{}'", "", input.unctrl(ch))
@@ -229,7 +254,6 @@ class Level(object):
     def dig_dungeon(self):
         self.dig_room((0, 0),
                       (self.rows, self.cols))
-        self.light_room()
 
     def dig_room(self, topleft, size):
         rows, cols = size
@@ -264,3 +288,31 @@ class Level(object):
         for row in range(self.rows):
             for col in range(self.cols):
                 self.reveal(row, col)
+
+    def check_stairs(self, down=True):
+        if self.dungeon[self.player.row][self.player.col] != TILE.STAIRS:
+            self.screen.message("I see no way {}".
+                                format("down" if down else "up"))
+            return False
+
+        if down:
+            if self.level >= g.AMULETLEVEL - 1:
+                if not self.player.has_amulet():
+                    self.player.pack.append("AMULET")
+                self.screen.message("You have the amulet!")
+            return True
+
+        if not self.player.has_amulet():
+            self.screen.message("Your way is magically blocked")
+            return False
+
+        self.screen.message("You feel a wrenching sensation in your gut")
+        return True
+
+    def put_stairs(self):
+        goodtile = False
+        while not goodtile:
+            row = rnd.rnd(self.rows)
+            col = rnd.rnd(self.cols)
+            goodtile = self.dungeon[row][col] == TILE.FLOOR
+        self.dungeon[row][col] = TILE.STAIRS

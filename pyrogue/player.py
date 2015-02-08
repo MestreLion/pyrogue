@@ -95,3 +95,6 @@ class Player(object):
 
         # After move consequences
         self.food -= 1
+
+    def has_amulet(self):
+        return "AMULET" in self.pack  # fake
