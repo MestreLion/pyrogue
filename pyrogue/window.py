@@ -150,7 +150,12 @@ class Window(object):
             return c[1], functools.reduce(operator.or_, c[4:], colors[c[3]])
 
     def draw(self, row, col, char):
-        self.window.addstr(row, col, *self.charattrs(char))
+        try:
+            self.window.addstr(row, col, *self.charattrs(char))
+        except curses.error:
+            # last char of last row, not allowed by curses due to scroll
+            self.window.delch( row, col)
+            self.window.insstr(row, col, *self.charattrs(char))
 
 class Screen(Window):
     def __init__(self, stdscr, size):
@@ -232,7 +237,9 @@ class Screen(Window):
 
         # Current time
         msg = time.strftime("%H:%M")
-        self.window.addstr(row, cols - len(msg) - 1, msg, curses.A_REVERSE)
+        self.window.delch(row, cols-1)
+        self.window.addstr(row, cols - len(msg), msg[:-1], curses.A_REVERSE)
+        self.window.insstr(row, cols - 1,        msg[-1:], curses.A_REVERSE)
 
     def message(self, terse, noterse="", *args, **kwargs):
         text = terse + noterse  # for now...
