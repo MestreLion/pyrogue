@@ -35,10 +35,6 @@ from .game import Game
 log = logging.getLogger(__name__)
 
 
-class GameError(Exception):
-    pass
-
-
 def parseargs(argv=None):
     parser = argparse.ArgumentParser(
         description="Python port of the PC-DOS classic game Rogue")
@@ -87,7 +83,7 @@ def main(argv=None):
     try:
         curses.wrapper(init, args)
         curses.flushinp()
-    except GameError as e:
+    except g.GameError as e:
         log.error(e)
     except Exception as e:
         log.critical(e, exc_info=1)
@@ -99,12 +95,12 @@ def init(stdscr, args):
     log.info("Terminal size: %d x %d", cols, rows)
 
     if cols < g.COLS or rows < g.ROWS:
-        raise GameError("{} requires a terminal of at least {} x {},"
+        raise g.GameError("{} requires a terminal of at least {} x {},"
                         " current is {} x {}".format(
                         g.APPNAME, g.COLS, g.ROWS, cols, rows))
 
     if not curses.has_colors():
-        raise GameError("{} requires a color terminal")
+        raise g.GameError("{} requires a color terminal")
 
     curses.use_default_colors()
 

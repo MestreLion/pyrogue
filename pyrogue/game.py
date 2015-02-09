@@ -33,14 +33,6 @@ log = logging.getLogger(__name__)
 MAXLEVEL = 99  # No such restriction in DOS
 
 
-class Win(Exception):
-    pass
-
-
-class Lose(Exception):
-    pass
-
-
 class TILE(enum.Enum):
     # FEATURES
     STAIRS   = '%'
@@ -163,15 +155,15 @@ class Game(object):
             while True:
                 nextlevel = min(self.level.play(), MAXLEVEL)
                 if nextlevel == 0:
-                    raise Win()
+                    raise g.Win()
 
                 self.maxlevel = max(nextlevel, self.maxlevel)
                 self.level = Level(nextlevel, self.screen, self.player)
 
-        except Win as e:
+        except g.Win as e:
             self.win()
 
-        except Lose as e:
+        except g.Lose as e:
             self.death(e)
 
     def win(self):
@@ -211,7 +203,7 @@ class Level(object):
             self.screen.clear_message()
 
             if ch == ord('Q'):
-                raise Lose("Quit")
+                raise g.Lose("Quit")
 
             elif ch in input.MOVE.LEFT:       self.player.move( 0, -1)  # Left
             elif ch in input.MOVE.DOWN:       self.player.move( 1,  0)  # Down

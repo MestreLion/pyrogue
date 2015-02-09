@@ -40,3 +40,8 @@ CONFIGDIR = xdg.save_config_path(APPNAME)
 COLS, ROWS = (80, 25)  # Screen size
 PLAYERNAME = "MestreLion"  # Player default name
 AMULETLEVEL = 5  # Level Amulet starts appearing @for now
+
+# Custom exceptions
+class GameError(Exception): pass
+class Win(GameError): pass
+class Lose(GameError): pass
