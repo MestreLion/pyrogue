@@ -229,6 +229,9 @@ class Level(object):
                 if self.check_stairs(down=True):
                     return self.level + 1
 
+            elif ch == ord(' '):
+                pass  # ignore spaces. Can be used to dismiss messages
+
             else:
                 self.screen.message("Illegal command '{}'", "",
                                     input.unctrl(ch))

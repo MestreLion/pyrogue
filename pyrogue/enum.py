@@ -36,6 +36,11 @@ class _meta(type):
         '''Yield members sorted by value, not declaration order'''
         return iter(sorted(self.__members__.values()))
 
+    def __reversed__(self):
+        '''Yield members sorted by descending value order'''
+        return reversed(tuple(self))
+        # tuple() is required to create a sequence out of the Enum
+
     def __getitem__(self, k):
         try:
             return self.__members__[k]

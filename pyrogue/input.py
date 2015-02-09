@@ -47,6 +47,13 @@ class MOVE(enum.Enum):
     DOWN_LEFT  = (curses.KEY_END,   ord('b'), curses.KEY_SELECT)
 
 
+KEY = type("KEY",
+           (enum.Enum,),
+           {KEY[4:]: getattr(curses, KEY)
+            for KEY in dir(curses)
+            if KEY.startswith("KEY_")})
+
+
 def getch(window):
     '''Get a character from user. Blocks until input.
         Wrapper for curses.window.getch()
