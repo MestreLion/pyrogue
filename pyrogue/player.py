@@ -28,11 +28,14 @@ log = logging.getLogger(__name__)
 
 
 class HUNGER(enum.Enum):
-    '''Minimum food in stomach before some effect or warning'''
+    '''Minimum food in stomach before some effect or warning
+        Values represent the last "safe" food amount before the step
+    '''
     HUNGRY =  300  # WEAK * 2 in DOS. No effect, just a warning.
-    WEAK   =  150  # Actually has no effect either, just the warning
-    FAINT  =    1  # Start fainting
-    STARVE = -850  # Die of starvation
+    WEAK   =  150  # No effect either, just the warning
+    FAINT  =    0  # Start fainting. Unix: 20
+    STARVE = -851  # Die of starvation. Unix: 0. Ouch! :)
+        # This is the effective value in DOS, intended was probably -850
 
     @classmethod
     def name(cls, v):
@@ -92,6 +95,10 @@ class Player(object):
     @property
     def hungerstage(self):
         '''Name of the hunger stage, based on current food in stomach'''
+        # DOS: "Faint" in status bar is only displayed after player actually
+        #  faints for the first time. This would require a private property,
+        #  `hungry_stage` or similar, which would defeat the whole point
+        #  of this function.
         for food in HUNGER:
             if self.food < food:
                 return HUNGER.name(food)
@@ -101,11 +108,15 @@ class Player(object):
     @property
     def metabolism(self):
         '''How much food is consumed every turn.
-            Depends on worn rings and screen width.
-            Some rings have random consumption,
-            so this value may change on every read!
+            Depends on current food, worn rings and screen width.
+            Some rings have random consumption, so this value may change
+            on every read!
         '''
         deltafood = 1
+
+        if self.food <= HUNGER.FAINT:
+            return deltafood
+
         for ring in (self.ringleft,
                      self.ringright):
             if ring is not None:
@@ -143,14 +154,17 @@ class Player(object):
 
     def digest(self):
         '''Deplete food in stomach'''
+        # Unix has very different mechanics, specially on fainting and rings
+
+        oldfood = self.food
+        self.food -= self.metabolism
+
         if self.food < HUNGER.STARVE:
             raise g.Lose("Starvation")
 
         if self.food < HUNGER.FAINT:
-            self.food -= 1  # Regardless of any rings!
-
-            # 20% chance to avoid fainting, if not already
-            if self.skipturns > 0 or rnd.perc(20):
+            # 80% chance to avoid fainting, if not already
+            if self.skipturns > 0 or rnd.perc(80):
                 return
 
             # Faint for a few turns
@@ -163,9 +177,6 @@ class Player(object):
             self.screen.message("%sYou faint from the lack of food",
                                 "You feel very weak. ")
             return
-
-        oldfood = self.food
-        self.food -= self.metabolism
 
         if self.food < HUNGER.WEAK and oldfood >= HUNGER.WEAK:
             self.screen.message("You are starting to feel weak")
