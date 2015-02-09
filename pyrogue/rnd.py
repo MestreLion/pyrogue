@@ -65,9 +65,20 @@ def rnd(n):
     return ((_ran() + _ran()) & 0x7fffffff) % n;
 
 
+def rand(a, b):
+    '''Return a random integer in range [a, b]'''
+    return rnd(b - a + 1) + a
+
+
+def perc(n):
+    '''Return True with n% probability'''
+    return rand(1, 100) <= n
+
+
 def spread(n):
     '''Return a random integer in range [n +/- 10%)'''
     return n - n // 10 + rnd(n // 5)
+
 
 def roll(number, sides):
     '''Roll <number> times a dice of <sides> sides,

@@ -130,7 +130,7 @@ class Game(object):
         self.rng = rnd.get_state()
 
         self.maxlevel = 1
-        self.player = Player(g.PLAYERNAME)
+        self.player = Player(g.PLAYERNAME, self.screen)
         self.level = Level(self.maxlevel, self.screen, self.player)
 
         # DOS 1.1: "Hello {}%s", ", Welcome to the Dungeons of Doom"
@@ -145,7 +145,7 @@ class Game(object):
         state = rnd.get_state()  # also fake
 
         rnd.set_state(state)
-        self.player = Player("Loaded Game")
+        self.player = Player("Loaded Game", self.screen)
         self.maxlevel = 15
         self.level = Level(self.maxlevel, self.screen, self.player)
 
@@ -219,6 +219,8 @@ class Level(object):
             elif ch in input.MOVE.UP_LEFT:    self.player.move(-1, -1)  # Up Left
             elif ch in input.MOVE.DOWN_LEFT:  self.player.move( 1, -1)  # Down Left
 
+            elif ch == ord('.'): self.player.rest()
+
             elif ch == ord('<'):
                 if self.check_stairs(down=False):
                     return self.level - 1
@@ -230,6 +232,18 @@ class Level(object):
             else:
                 self.screen.message("Illegal command '{}'", "",
                                     input.unctrl(ch))
+
+    def tick(self):
+        '''Advance the world one tick (turn)
+            some commands, like rest, search or successful move trigger this
+            others like see inventory, help or failed move do not
+        '''
+        self.player.heal()
+        self.player.digest()
+        # auto-search
+        # create wander monsters
+        # move monsters
+        # ...
 
     def draw(self, thing):
         '''Draw something at its current position'''
