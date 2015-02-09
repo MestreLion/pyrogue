@@ -159,11 +159,17 @@ class Window(object):
             self.window.insstr(row, col, *self.charattrs(char))
 
 class Screen(Window):
-    def __init__(self, stdscr, size):
+    def __init__(self, stdscr, size, terse=None):
         self.parent = None
         self.position = (0, 0)
         self.size = size
         self.window = stdscr
+
+        if terse is None:
+            self.terse = self.size[1] <= 40
+        else:
+            self.terse = terse
+
         if self.size != self.window.getmaxyx():
             self.window.resize(*size)
 
@@ -242,11 +248,39 @@ class Screen(Window):
         self.window.addstr(row, cols - len(msg), msg[:-1], curses.A_REVERSE)
         self.window.insstr(row, cols - 1,        msg[-1:], curses.A_REVERSE)
 
-    def message(self, terse, noterse="", *args, **kwargs):
-        text = terse + noterse  # for now...
-        msg = text.format(*args, **kwargs).replace('\n', '\\n').replace('\0', '\\0')
+    def message(self, terse, verbose="", *args, **kwargs):
+        '''Display a message in the top bar.
+            Messages have a `terse`, usually short format, and optionally
+            `verbose`, one. Verbose is combined with terse using
+            plain string interpolation (%), or appended with ". "
+            Afterwards, `*args` and `**kwargs` are substituted using
+            "{}".format(), '\n' and '\0' escaped, and trailing blanks stripped.
+            See also msgterse(), which does not combine terse and verbose
+        '''
+        if self.terse:
+            verbose = ""
+        text = terse
+        if verbose:
+            text = terse % verbose
+            if not self.terse and text == terse:
+                # No substitution occurred. Join them with '. '
+                text = ". ".join((terse, verbose))
+        msg = (text.format(*args, **kwargs).
+               replace('\n', '\\n').
+               replace('\0', '\\0').
+               rstrip())
         log.info(msg)
         self.window.addnstr(0, 0, left(msg, self.size[1]), self.size[1])
+
+    def msgterse(self, terse, verbose, *args, **kwargs):
+        '''Display either a terse or a verbose message in top bar
+            See message() for details
+        '''
+        if self.terse:
+            text = terse
+        else:
+            text = verbose
+        self.message(text, "", *args, **kwargs)
 
     def clear_message(self):
         self.window.move(0, 0)

@@ -133,8 +133,11 @@ class Game(object):
         self.player = Player(g.PLAYERNAME)
         self.level = Level(self.maxlevel, self.screen, self.player)
 
-        self.screen.message("Hello {}.".format(self.player.name),
-                            " Welcome to the Dungeons of Doom")
+        # DOS 1.1: "Hello {}%s", ", Welcome to the Dungeons of Doom"
+        # DOS: Had an extra space before 'Welcome', probably a typo
+        self.screen.message("Hello {}%s.",
+                            ". Welcome to the Dungeons of Doom",
+                            self.player.name)
 
     def load(self, savegame):
         # load file and set all attributes that new() does
@@ -146,8 +149,9 @@ class Game(object):
         self.maxlevel = 15
         self.level = Level(self.maxlevel, self.screen, self.player)
 
-        self.screen.message("Hello {}.".format(self.player.name),
-                            " Welcome back to the Dungeons of Doom")
+        self.screen.msgterse("{}, Welcome back!",
+                            "Hello {}, Welcome back to the Dungeons of Doom!",
+                            self.player.name)
 
     def play(self):
         # wiring between levels
@@ -171,7 +175,8 @@ class Game(object):
         input.getch(self.screen)
 
     def death(self, msg=None):
-        self.screen.message("You're dead! {}".format(msg or "").rstrip())
+        self.screen.message("You're dead! {}", "",
+                            msg or "")
         input.getch(self.screen)
 
 
@@ -223,7 +228,8 @@ class Level(object):
                     return self.level + 1
 
             else:
-                self.screen.message("Illegal command '{}'", "", input.unctrl(ch))
+                self.screen.message("Illegal command '{}'", "",
+                                    input.unctrl(ch))
 
     def draw(self, thing):
         '''Draw something at its current position'''
@@ -283,8 +289,8 @@ class Level(object):
 
     def check_stairs(self, down=True):
         if self.dungeon[self.player.row][self.player.col] != TILE.STAIRS:
-            self.screen.message("I see no way {}".
-                                format("down" if down else "up"))
+            self.screen.message("I see no way {}", "",
+                                "down" if down else "up")
             return False
 
         if down:
