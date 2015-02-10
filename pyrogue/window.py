@@ -102,10 +102,10 @@ def align( text, width, fill, align):
 
 
 class Window(object):
-    def __init__(self, parent, position, size):
+    def __init__(self, parent, size, position):
         self.parent = parent
-        self.position = position
         self.size = size
+        self.position = position
         self.window = self.parent.derwin(*(self.size + self.position))
         self.window.keypad(1)
         log.debug("Window at %r, size %r", position, size)
@@ -158,10 +158,11 @@ class Window(object):
             self.window.delch( row, col)
             self.window.insstr(row, col, *self.charattrs(char))
 
+
 class Screen(Window):
-    def __init__(self, stdscr, size, terse=None):
+    def __init__(self, stdscr, size, position=(0, 0), terse=None):
         self.parent = None
-        self.position = (0, 0)
+        self.position = position
         self.size = size
         self.window = stdscr
 
@@ -173,8 +174,12 @@ class Screen(Window):
         if self.size != self.window.getmaxyx():
             self.window.resize(*size)
 
-        self.playarea = Window(self.window, (4, 0), (self.size[0]-7,
-                                                     self.size[1]))
+        if position != (0, 0):
+            self.window.mvwin(*self.position)
+
+        self.playarea = Window(self.window,
+                               (self.size[0]-7, self.size[1]),
+                               (4, 0))
 
         # Upper box - chars showcase
         self.box((1, 0), (3, self.size[1]))
