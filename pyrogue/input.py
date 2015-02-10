@@ -22,7 +22,7 @@ and related curses methods and constants
 
 import os
 import sys
-import curses
+import curses.ascii
 import locale
 
 from . import enum
@@ -41,17 +41,44 @@ class MOVE(enum.Enum):
     DOWN       = (curses.KEY_DOWN,  ord('j'))
     LEFT       = (curses.KEY_LEFT,  ord('h'))
     RIGHT      = (curses.KEY_RIGHT, ord('l'))
-    UP_RIGHT   = (curses.KEY_PPAGE, ord('u'))
-    DOWN_RIGHT = (curses.KEY_NPAGE, ord('n'))
-    UP_LEFT    = (curses.KEY_HOME,  ord('y'), curses.KEY_FIND)
-    DOWN_LEFT  = (curses.KEY_END,   ord('b'), curses.KEY_SELECT)
+    UP_RIGHT   = (curses.KEY_PPAGE, ord('u'), curses.KEY_A3)
+    DOWN_RIGHT = (curses.KEY_NPAGE, ord('n'), curses.KEY_C3)
+    UP_LEFT    = (curses.KEY_HOME,  ord('y'), curses.KEY_A1, curses.KEY_FIND)
+    DOWN_LEFT  = (curses.KEY_END,   ord('b'), curses.KEY_C1, curses.KEY_SELECT)
 
 
-KEY = type("KEY",
-           (enum.Enum,),
-           {KEY[4:]: getattr(curses, KEY)
-            for KEY in dir(curses)
-            if KEY.startswith("KEY_")})
+class KEY(enum.Enum):
+    RESIZE = curses.KEY_RESIZE
+    F1  = curses.KEY_F1
+    F2  = curses.KEY_F2
+    F3  = curses.KEY_F3
+    F4  = curses.KEY_F4
+    F5  = curses.KEY_F5
+    F6  = curses.KEY_F6
+    F7  = curses.KEY_F7
+    F8  = curses.KEY_F8
+    F9  = curses.KEY_F9
+    F10 = curses.KEY_F10
+    F11 = curses.KEY_F11
+    F12 = curses.KEY_F12
+
+    # Some aliases
+    INSERT = curses.KEY_IC
+    DELETE = curses.KEY_DC
+    NUM_5  = curses.KEY_B2
+    ALT_F9 = curses.KEY_F57
+    ESC    = curses.ascii.ESC
+
+
+# The above make static analyzers like Pylint and Pydev happy
+# Now generate all other KEY constants
+for _ in dir(curses):
+    if _.startswith("KEY_"):
+        setattr(KEY, _[4:], getattr(curses, _))
+
+
+def ctrl(c):
+    return curses.ascii.ctrl(ord(c))
 
 
 def getch(window):

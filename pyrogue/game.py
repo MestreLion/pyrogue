@@ -210,6 +210,11 @@ class Level(object):
             if ch == ord('Q'):
                 raise g.Lose("Quit")
 
+            elif ch == input.KEY.RESIZE: self.screen.message("Terminal resized")
+            elif ch == input.KEY.ESC:    self.screen.message("ESC")
+            elif ch == input.KEY.ALT_F9: self.screen.message("Set macro")
+            elif ch == input.ctrl('R'):  self.screen.message("Re-message")
+
             elif ch in input.MOVE.LEFT:       self.player.move( 0, -1)  # Left
             elif ch in input.MOVE.DOWN:       self.player.move( 1,  0)  # Down
             elif ch in input.MOVE.UP:         self.player.move(-1,  0)  # Up
@@ -233,8 +238,8 @@ class Level(object):
                 pass  # ignore spaces. Can be used to dismiss messages
 
             else:
-                self.screen.message("Illegal command '{}'", "",
-                                    input.unctrl(ch))
+                self.screen.message("Illegal command '{}', ch={}", "",
+                                    input.unctrl(ch), ch)
 
     def tick(self):
         '''Advance the world one tick (turn)
