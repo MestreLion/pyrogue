@@ -128,6 +128,12 @@ class Player(object):
 
         return deltafood
 
+    @property
+    def has_amulet(self):
+        return "AMULET" in self.pack  # @@fake
+
+    # ACTIONS ###########
+
     def move(self, dr, dc):
         row = self.row + dr
         col = self.col + dc
@@ -148,6 +154,8 @@ class Player(object):
     def rest(self):
         '''Do nothing for a turn'''
         self.level.tick()
+
+    # DAEMONS ###########
 
     def heal(self):
         pass
@@ -183,6 +191,3 @@ class Player(object):
 
         elif self.food < HUNGER.HUNGRY and oldfood >= HUNGER.HUNGRY:
             self.screen.message("You are starting to get hungry")
-
-    def has_amulet(self):
-        return "AMULET" in self.pack  # fake

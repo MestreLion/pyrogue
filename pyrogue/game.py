@@ -317,12 +317,12 @@ class Level(object):
 
         if down:
             if self.level >= g.AMULETLEVEL - 1:
-                if not self.player.has_amulet():
+                if not self.player.has_amulet:
                     self.player.pack.append("AMULET")
                 self.screen.message("You have the amulet!")
             return True
 
-        if not self.player.has_amulet():
+        if not self.player.has_amulet:
             self.screen.message("Your way is magically blocked")
             return False
 
