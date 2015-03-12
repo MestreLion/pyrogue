@@ -57,9 +57,30 @@ CGA_COLORS = [
 CGA_SIZE = (320, 200, 2)  # 2 bits per pixel = 4 colors
 FPS = 10
 
+cgaterm = {0: 0,
+           1: 6,
+           2: 5,
+           3: 7}
+def termcolor(i, n): return (u"\033[1;3%sm" + n * u"\u2588") % cgaterm[i] if i > 0 else (termreset() + n * ' ')
+def termreset():  return "\033[00m"
 
-def display_ascii(filename, timeout=0, size=(), fullscreen=False):
+
+def display_ascii(filename):
+    """
+    cols, rows = (CGA_SIZE[0] // 2,
+                  CGA_SIZE[1] // 4)
+    """
+    lscale = 1
+    cscale = (lscale / 2) if lscale > 1 else 1
+    n = 1 if cscale > 1 else 2
+    lines = bload(filename)
+    for line in lines[::lscale]:
+        print("".join(termcolor(color, n) for color in line[::cscale]) + termreset())
+
+
+def display_sdl_ascii(filename, timeout=0, size=(), fullscreen=False):
     return display_sdl(filename, timeout, size, fullscreen, videodriver="caca")
+
 
 def display_sdl(filename, timeout=0, size=(), fullscreen=False, videodriver=""):
     '''Display an image in PIC/BSAVE format using SDL
@@ -203,8 +224,8 @@ def gcd(a, b):
 if __name__ == '__main__':
     try:
         logging.basicConfig(level=logging.DEBUG)
-        display_sdl(os.path.join(os.path.dirname(__file__), '..', 'rogue.pic'),
-                    timeout=0, size=(0, 0), fullscreen=False)
+        display_ascii(os.path.join(os.path.dirname(__file__), '..', 'rogue.pic'),
+                    )#timeout=0, size=(0, 0), fullscreen=False)
     except KeyboardInterrupt:
         pass
     finally:
