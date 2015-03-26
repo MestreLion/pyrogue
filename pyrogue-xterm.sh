@@ -22,7 +22,8 @@
 fullscreen=0
 
 rogueargs=()
-xtargs=(-fa 'Perfect DOS VGA 437 Unicode' -fs 24 -geometry 80x25 +bdc)
+xtargs=(-fa 'Perfect DOS VGA 437 Unicode' -fs 24 -geometry 80x25 +bdc -uc +fbx
+	-title 'Rogue' -tn 'xterm-256color' -fg gray -bg black)
 gamecmd=$(dirname "$(readlink -f "$0")")/pyrogue.sh
 
 usage() {
