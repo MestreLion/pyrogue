@@ -25,8 +25,6 @@
 # Constants
 name=rogue  # must match profile name used by ../pyrogue-gnome-terminal !
 gconfdata=gnome-terminal-profile.gconf.xml
-font=PerfectDOSVGA437Unicode.ttf
-fontdir="$HOME"/.fonts
 
 # Environment
 mydir=$(dirname "$(readlink -f "$0")")
@@ -95,14 +93,11 @@ for arg in "$@"; do [[ "$arg" == "-h" || "$arg" == "--help" ]] && usage ; done
 if ! version_compare "greater" "$version" 3.8; then
 	gt_gconf "$name" "$mydir"/"$gconfdata"
 else
-	echo "Your Gnome Terminal version ($version) is not supported yet."
+	echo "Your Gnome Terminal version ($version) is not yet supported."
 	exit 1
 fi
 
-echo "Installing font '$font' to '$fontdir'"
-mkdir -p "$fontdir"
-cp -- "$mydir"/"$font" "$fontdir"
+"$mydir"/perfect-dos-font.install
 
 echo "Done!"
 echo "Use gnome-terminal launcher for the ultimate Rogue DOS experience!"
-echo "(font will only be available after closing all gnome-terminal windows)"
