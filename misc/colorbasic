@@ -1,0 +1,2 @@
+#!/bin/bash
+reset; for i in {0..7}; do tput setaf $i; echo "normal $i: ########"; tput bold; echo "bold   $i: ########"; tput sgr0; done

@@ -1,0 +1,44 @@
+#!/bin/bash
+
+reset(){
+	tput sgr0
+	echo
+}
+
+out() {
+	local n=$1
+	tput setab "$n"
+	printf "% 4d" "$n"
+}
+
+# normal colors 1 - 16
+tput setaf 16
+for n in {0..7}; do
+	out "$n"
+done
+reset
+
+for n in {8..15}; do
+	out "$n"
+done
+reset
+
+
+y=16
+echo
+while ((y < 232)); do
+	for z in {0..5}; do
+		out "$y"
+		((y += 1))
+	done
+	reset
+done
+
+echo
+for n in {232..255}; do
+	out "$n"
+	if ((n == 237 || n == 243 || n == 249)); then
+		reset
+	fi
+done
+reset
