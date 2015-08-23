@@ -1,0 +1,101 @@
+- ESC timeout via input.ini() called by main(), setting env var
+
+- Lose info via custom exception attributes (gold, name, rank, level, message)
+
+- Title screen: small font, ASCII colored solid block (U2588)
+
+- resize terminal window
+	resize-terminal() { echo -e "\x1b[8;${2};${1}t"; }
+
+- bash launcher:
+	- gnome-terminal 3.13 onwards does not set COLORTERM!
+	- detect gnome-terminal. if so, and type xterm, launch with:
+		xterm -fullscreen -fa 'Monospace' -fs 28 -e python3 -m pyrogue
+
+
+- capslock leds
+	dumpkeys | grep 'CtrlL_Lock' | sed 's/CtrlL_Lock/Caps_Lock/' | sudo loadkeys
+	add to /etc/rc.local for permanent fix (with 2>/dev/null for the annoying error)
+
+- xterm
+	config at ~/.Xresources. Must restart X. Or...
+	xrdb -merge ~/.Xresources
+	xterm -fullscreen -fa 'Monospace' -fs 28 -e python3 -m pyrogue
+	xterm -fullscreen -fa 'Perfect DOS VGA 437 Unicode' -fs 28 -e python3 -m pyrogue
+
+	# no bold chars, underline cursor, assume line-drawing characters
+	xterm +bdc -uc +fbx -fa 'Perfect DOS VGA 437 Unicode' -geometry 80x25 -title 'Rogue PC' -tn 'xterm-256color' -fg gray -bg black -fs 24
+
+	/etc/X11/app-defaults/{,U}XTerm
+
+- console fonts
+	suggest package fonts-ubuntu-font-family-console
+	setfont /usr/share/consolefonts/UbuntuMono-R-8x16.psf
+	defaut seems to be /usr/share/consolefonts/Uni1-VGA16.psf.gz
+	set permanent: sudo dpkg-reconfigure console-setup && sudo setupcon
+	recommended font for rogue: TerminusBoldVGA
+	Steps for console-setup:
+		UTF-8	. Combined - Latin; Slavic Cyrillic; Greek	TerminusBoldVGA	16
+	Steps for console-setup to revert to default:
+		UTF-8	. Combined - Latin; Slavic Cyrillic; Greek	VGA (Fixed?)	16
+		(/etc/default/console-setup)
+
+- 256 colors
+	http://blog.sanctum.geek.nz/term-strings/
+	http://blog.sanctum.geek.nz/256-colour-terminals/
+	http://unix.stackexchange.com/a/181766/4919
+	http://askubuntu.com/a/578798/11015
+	tput colors  # how many colors current terminal support
+	TERM=xterm-256color  # enable 256 colors in xterm and gnome-terminal, works in 12.04
+	But the terminal emulator is supposed to set $TERM, not shell files. So:
+		Gnome-terminal -> Preferences -> Title and Command -> Custom command:
+		env TERM=xterm-256color /bin/bash
+	For tty1-6: etc/init/tty*.conf spawn terminals with getty
+	find {/lib,/usr/share}/terminfo -xtype f      | sed 's#.*/##' | sort -u  # list all terminals. A loooong list (2640 in 12.04)
+	find {/lib,/usr/share}/terminfo -name '*256*' | sed 's#.*/##' | sort -u  # list all colorful terminals (20)
+	./colortest; tput reset  # perl script to test terminal colors *capabilities* (regardless if enabled or advertised via TERM)
+	./colormode: # shell script to test currently enabled colors.
+	TERM=xterm-256color ./colormode  # enable and test colors
+	msgcat --color=test  # amazing test!
+	infocmp [terminal]  # capabilities of a named terminal
+	mkdir -p ~/.terminfo/x && ln -s /lib/terminfo/x/xterm-256color ~/.terminfo/x/xterm  # locally make xterm an alias for xterm-256
+
+- IBM Fonts
+	ftp://ftp.software.ibm.com/ps/products/dos/fixes/dos7.0/year2000/
+	http://www.vogons.org/viewtopic.php?t=29841
+	https://sourceforge.net/p/dosbox/code-0/HEAD/tree/dosbox/trunk/src/ints/int10_memory.cpp
+	http://www.vogons.org/viewtopic.php?f=32&t=39227
+
+xterm ideas
+
+xterm*faceName: DejaVu Sans Mono Book
+xterm*faceSize: 11
+
+! Every shell is a login shell by default (for inclusion of all necessary environment variables)
+xterm*loginshell: true
+
+! I like a LOT of scrollback...
+xterm*savelines: 16384
+
+! double-click to select whole URLs :D
+xterm*charClass: 33:48,36-47:48,58-59:48,61:48,63-64:48,95:48,126:48
+
+! DOS-box colours...
+xterm*foreground: rgb:a8/a8/a8
+xterm*background: rgb:00/00/00
+xterm*color0: rgb:00/00/00
+xterm*color1: rgb:a8/00/00
+xterm*color2: rgb:00/a8/00
+xterm*color3: rgb:a8/54/00
+xterm*color4: rgb:00/00/a8
+xterm*color5: rgb:a8/00/a8
+xterm*color6: rgb:00/a8/a8
+xterm*color7: rgb:a8/a8/a8
+xterm*color8: rgb:54/54/54
+xterm*color9: rgb:fc/54/54
+xterm*color10: rgb:54/fc/54
+xterm*color11: rgb:fc/fc/54
+xterm*color12: rgb:54/54/fc
+xterm*color13: rgb:fc/54/fc
+xterm*color14: rgb:54/fc/fc
+xterm*color15: rgb:fc/fc/fc
