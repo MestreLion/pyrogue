@@ -296,3 +296,31 @@ class Screen(Window):
         self.systembar()
         self.playarea.window.move(player.row, player.col)
         self.window.refresh()
+
+    def dialog(self):
+        return TextDialog(self)
+
+
+class TextDialog(Window):
+    def __init__(self, parent=None, size=(), position=(0, 0)):
+        self.parent = parent
+
+        # Default to parent size or (0, 0)
+        self.size = size or (self.parent.window.getmaxyx()
+                             if self.parent is not None
+                             else (0, 0))
+
+        # Convert relative position from parent to absolute
+        self.position = tuple(map(sum, zip(position,
+                                           self.parent.window.getbegyx()
+                                           if self.parent is not None
+                                           else (0, 0))))
+
+        self.window = curses.newwin(*(self.size + self.position))
+
+    def addline(self, line, *attrs):
+        pass
+
+    def show(self):
+        self.window.addstr("-Press any key to continue-")
+        self.window.getch()

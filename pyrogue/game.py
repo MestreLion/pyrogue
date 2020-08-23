@@ -19,6 +19,7 @@
 
 import string
 import logging
+import curses
 
 from . import g
 from . import input
@@ -221,10 +222,14 @@ class Level(object):
             if ch == ord('Q'):
                 raise g.Lose("Quit")
 
-            elif ch == input.KEY.RESIZE: self.screen.message("Terminal resized")
-            elif ch == input.KEY.ESC:    self.screen.message("ESC")
-            elif ch == input.KEY.ALT_F9: self.screen.message("Set macro")
-            elif ch == input.ctrl('R'):  self.screen.message("Re-message")
+            elif ch == input.KEY.RESIZE:
+                self.screen.message("Terminal resized")
+                print("\x1b[8;25;80t")
+                input.getch(self.screen.playarea)
+
+            elif ch == input.KEY.ESC:     self.screen.message("ESC")
+            elif ch == input.KEY.ALT_F9:  self.screen.message("Set macro")
+            elif ch == input.ctrl('R'):   self.screen.message("Re-message")
 
             elif ch in input.MOVE.LEFT:       self.player.move( 0, -1)  # Left
             elif ch in input.MOVE.DOWN:       self.player.move( 1,  0)  # Down
@@ -236,6 +241,7 @@ class Level(object):
             elif ch in input.MOVE.DOWN_LEFT:  self.player.move( 1, -1)  # Down Left
 
             elif ch == ord('.'): self.player.rest()
+            elif ch == ord('i'): self.player.show_inventory()
 
             elif ch == ord('<'):
                 if self.check_stairs(down=False):

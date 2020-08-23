@@ -155,6 +155,12 @@ class Player(object):
         '''Do nothing for a turn'''
         self.level.tick()
 
+    def show_inventory(self):
+        dialog = self.screen.dialog()
+        for item in self.pack:
+            dialog.addline(item)
+        dialog.show()
+
     # DAEMONS ###########
 
     def heal(self):
