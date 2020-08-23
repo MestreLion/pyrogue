@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 #    Copyright (C) 2015 Rodrigo Silva (MestreLion) <linux@rodrigosilva.com>
@@ -19,7 +19,9 @@
 '''Display the splash (title) image'''
 
 import os
+import sys
 import logging
+import locale
 
 try:
     import pygame
@@ -34,7 +36,21 @@ except ValueError:
     import enum
 
 
+if sys.version < '3':
+    import codecs
+    def u(x):
+        return (codecs.unicode_escape_decode(x)[0].
+            encode(locale.getpreferredencoding()))
+    def b(x):
+        return ord(x)
+else:
+    def u(x):
+        return x
+    def b(x):
+        return x
+
 log = logging.getLogger(__name__)
+
 
 class COLOR(enum.Enum):
     BLACK   = (  0,   0,   0)
@@ -45,7 +61,6 @@ class COLOR(enum.Enum):
     MAGENTA = (255,   0, 255)
     YELLOW  = (255, 255,   0)
     WHITE   = (255, 255, 255)
-
 
 CGA_COLORS = [
     COLOR.BLACK,
@@ -61,8 +76,10 @@ cgaterm = {0: 0,
            1: 6,
            2: 5,
            3: 7}
-def termcolor(i, n): return (u"\033[1;3%sm" + n * u"\u2588") % cgaterm[i] if i > 0 else (termreset() + n * ' ')
-def termreset():  return "\033[00m"
+def termcolor(i, n): return ((u("\033[1;3%sm") + n * u("\u2588")) % cgaterm[i]
+                             if i > 0
+                             else (termreset() + n * u(' ')))
+def termreset():  return u("\033[00m")
 
 
 def display_ascii(filename):
@@ -71,7 +88,7 @@ def display_ascii(filename):
                   CGA_SIZE[1] // 4)
     """
     lscale = 1
-    cscale = (lscale / 2) if lscale > 1 else 1
+    cscale = int(lscale / 2) if lscale > 1 else 1
     n = 1 if cscale > 1 else 2
     lines = bload(filename)
     for line in lines[::lscale]:
@@ -176,11 +193,13 @@ def bload(filename):
     return sum(zip(evens, odds), ())
 
 
-def unpackcga(chars):
-    '''Simplified version of unpackbyte() with CGA parameters'''
-    for c in chars:
-        for offset in (6, 4, 2, 0):
-            yield (ord(c) >> offset) & 3
+def unpackcga(byte):
+    '''Simplified version of unpackbyte() with CGA parameters,
+        Unpack a byte to 4 individual 2-bit values
+    '''
+    i = b(byte)
+    for offset in (6, 4, 2, 0):
+        yield (i >> offset) & 3
 
 
 def unpackbyte(chars, bpu=2):
@@ -224,9 +243,11 @@ def gcd(a, b):
 if __name__ == '__main__':
     try:
         logging.basicConfig(level=logging.DEBUG)
-        display_ascii(os.path.join(os.path.dirname(__file__), '..', 'rogue.pic'),
-                    )#timeout=0, size=(0, 0), fullscreen=False)
+        splashfile = os.path.join(os.path.dirname(__file__), '..', 'rogue.pic')
+        display_ascii(splashfile)
+        display_sdl_ascii(splashfile, timeout=0, size=(0, 0), fullscreen=False)
     except KeyboardInterrupt:
         pass
     finally:
-        pygame.quit()
+        if pygame:
+            pygame.quit()

@@ -24,6 +24,7 @@ from . import g
 from . import input
 from . import rnd
 from . import enum
+from . import things
 
 from .player import Player
 
@@ -187,6 +188,16 @@ class Level(object):
         self.player = player
 
         self.rows, self.cols = self.screen.playarea.size
+
+        self.dungeon  = {}  # the map
+        self.items    = {}
+        self.monsters = {}
+
+        for coord in ((row, col)
+                      for col in range(self.rows)
+                      for row in range(self.cols)):
+            self.dungeon[coord] = things.Item()
+
         self.dungeon = [[TILE.NOTHING] * self.cols for _ in range(self.rows)]
 
         # create rooms, monsters, etc
