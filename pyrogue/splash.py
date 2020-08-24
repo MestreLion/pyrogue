@@ -24,6 +24,7 @@ import logging
 import locale
 
 try:
+    os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"  # silence ad
     import pygame
 except ImportError:
     pygame = None
@@ -76,18 +77,25 @@ cgaterm = {0: 0,
            1: 6,
            2: 5,
            3: 7}
-def termcolor(i, n): return ((u("\033[1;3%sm") + n * u("\u2588")) % cgaterm[i]
-                             if i > 0
-                             else (termreset() + n * u(' ')))
-def termreset():  return u("\033[00m")
 
 
-def display_ascii(filename):
+def termreset():
+    return u("\033[00m")
+
+def termcolor(idx, n=1, char="\u2588", transparent_idx=None):
+    if transparent_idx is None or not idx == transparent_idx:
+        out = u("\033[1;3%sm") % (cgaterm[idx],)
+    else:
+        out = termreset()
+        char = u(' ')
+    return out + n * u(char)
+
+
+def display_ascii(filename, lscale=6):
     """
     cols, rows = (CGA_SIZE[0] // 2,
                   CGA_SIZE[1] // 4)
     """
-    lscale = 1
     cscale = int(lscale / 2) if lscale > 1 else 1
     n = 1 if cscale > 1 else 2
     lines = bload(filename)
@@ -106,7 +114,7 @@ def display_sdl(filename, timeout=0, size=(), fullscreen=False, videodriver=""):
         Suggested <videodriver>s: caca (colored ascii-art), fbcon
     '''
     if pygame is None:
-        log.warn("pygame module is required to display graphics using SDL")
+        log.error("pygame module is required to display graphics using SDL")
         return
 
     if videodriver:
@@ -116,7 +124,12 @@ def display_sdl(filename, timeout=0, size=(), fullscreen=False, videodriver=""):
     # It would enable fbcon, which throws exception if mouse is missing
     os.environ.setdefault('SDL_NOMOUSE', '1')
 
-    pygame.display.init()
+    try:
+        pygame.display.init()
+    except pygame.error as e:
+        log.error("Could not initialize video driver '%s': %s", videodriver, e)
+        return
+
     log.debug("Displaying using SDL. Requested and actual video driver: %s",
               (videodriver, pygame.display.get_driver()))
 
@@ -124,16 +137,14 @@ def display_sdl(filename, timeout=0, size=(), fullscreen=False, videodriver=""):
     if fullscreen:
         flags |= pygame.FULLSCREEN
 
-    # 960 x 600. Large enough and still safe
-    bigcga = (3 * CGA_SIZE[0],
-              3 * CGA_SIZE[1],)
-    if not size:
-        size = bigcga
-    if fullscreen or size == (0, 0):
+    if fullscreen and not size:
         size = (pygame.display.Info().current_w,
                 pygame.display.Info().current_h,)
-    if size == (0, 0):  # pygame Info() failed. (can be caca)
-        size = bigcga
+    elif not size:
+        size = 1
+    if isinstance(size, int):
+        size = (size * CGA_SIZE[0],
+                size * CGA_SIZE[1],)
 
     log.debug("Initializing display in mode %s, fullscreen %s", size, fullscreen)
 
@@ -181,7 +192,7 @@ def bload(filename):
     with open(filename, mode='rb') as fp:
         fp.read(7)  # Ignore header
         for lines in (evens, odds):
-            for _ in range(rows//2):
+            for __ in range(rows//2):
                 lines.append(sum(map(tuple, map(unpackcga,
                                                 fp.read(bypl))), ()))
             fp.read(192)  # Ignore padding
@@ -193,19 +204,19 @@ def bload(filename):
     return sum(zip(evens, odds), ())
 
 
-def unpackcga(byte):
-    '''Simplified version of unpackbyte() with CGA parameters,
-        Unpack a byte to 4 individual 2-bit values
-    '''
-    i = b(byte)
+def unpackcga(char):
+    """Faster version of unpackbyte() with CGA parameters (2 bits per unit).
+
+    Unpack a byte to 4 individual 2-bit values
+    """
+    i = b(char)
     for offset in (6, 4, 2, 0):
         yield (i >> offset) & 3
 
 
 def unpackbyte(chars, bpu=2):
-    '''Simplified version of unpackbits()
-        works only for bpu in (1, 2, 4), ie, units fully fits a byte.
-    '''
+    """Faster version of unpackbits() for bits per unit in (1, 2, 4)."""
+    assert bpu in (1, 2, 4), "bits per unit must be 1, 2 or 4. Use unpackbits() instead"
     mask = 2**bpu - 1
     offsets = tuple(reversed(range(0, 8, bpu)))
     for c in chars:
@@ -214,12 +225,19 @@ def unpackbyte(chars, bpu=2):
 
 
 def unpackbits(chars, bpu=2):
-    '''Unpack <chars> bytestring, yielding every <bpu> bits as an integer
-        Examples:
-            CGA Colors: unpackbits(b'axx', 2) -> (0, 2, 3, ...), len=24
-            base64-ish: unpackbits(b'Man', 6) -> (19, 22, 5, 46), len=4
-        For <bpu> in (1, 2, 4), use the simplified version unpackcga()
-    '''
+    """Unpack <chars> bytestring, yielding every <bpu>-bit units as an integer.
+
+    Examples:
+        CGA Colors: unpackbits(b'axx', 2) -> (0, 2, 3, ...), len=24
+        base64-ish: unpackbits(b'Man', 6) -> (19, 22, 5, 46), len=4
+
+    For <bpu> in (1, 2, 4), use the faster unpackbytes()
+    """
+    def gcd(a, b):
+        """Return greatest common divisor using Euclid's Algorithm"""
+        while b:
+            a, b = b, a % b
+        return a
     bypg = bpu // gcd(bpu, 8)
     groups = len(chars) // bypg
     mask = 2**bpu - 1
@@ -231,13 +249,6 @@ def unpackbits(chars, bpu=2):
             yield (word >> offset) & mask
 
 
-def gcd(a, b):
-    '''Return greatest common divisor using Euclid's Algorithm'''
-    while b:
-        a, b = b, a % b
-    return a
-
-
 
 
 if __name__ == '__main__':
@@ -245,7 +256,8 @@ if __name__ == '__main__':
         logging.basicConfig(level=logging.DEBUG)
         splashfile = os.path.join(os.path.dirname(__file__), '..', 'rogue.pic')
         display_ascii(splashfile)
-        display_sdl_ascii(splashfile, timeout=0, size=(0, 0), fullscreen=False)
+        # 960 x 600. Large enough and still safe
+        display_sdl(splashfile, timeout=0, size=3, fullscreen=False)
     except KeyboardInterrupt:
         pass
     finally:
