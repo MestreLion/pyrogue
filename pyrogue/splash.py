@@ -189,6 +189,15 @@ def display_sdl(filename, timeout=0, size=(), fullscreen=False, videodriver=""):
     pygame.quit()
 
 
+def export_pic(infile, outfile):
+    if pygame is None:
+        log.error("pygame module is required to display graphics using SDL")
+        return
+    image = pygame.surface.Surface(CGA_SIZE[:2])
+    load_pic(infile, image)
+    pygame.image.save(image, outfile)
+
+
 def load_pic(filename, surface):
     lines = bload(filename)
     for row, line in enumerate(lines):
@@ -273,6 +282,7 @@ if __name__ == '__main__':
     try:
         logging.basicConfig(level=logging.DEBUG)
         splashfile = os.path.join(os.path.dirname(__file__), '..', 'rogue.pic')
+        #export_pic(splashfile, 'teste.png')
         display_ascii(splashfile)
         # 960 x 600. Large enough and still safe
         display_sdl(splashfile, timeout=0, size=0, fullscreen=True)
