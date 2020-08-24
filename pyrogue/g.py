@@ -25,12 +25,14 @@ try:
 except ImportError:
     from . import xdg
 
+from . import __about__
+
 
 log = logging.getLogger(__name__)
 
 # General
-VERSION = "0.1"
-APPNAME = __package__
+VERSION = __about__.__version__
+APPNAME = __about__.__title__
 
 # Paths
 GAMEDIR = os.path.abspath(os.path.dirname(__file__) or '.')

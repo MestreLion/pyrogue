@@ -17,9 +17,12 @@
 
 '''Convenience directory launcher. Allows `python -m pyrogue` invocation'''
 
-from . import main
+from . import main as _main
 
-try:
-    main.main()
-except KeyboardInterrupt:
-    pass
+def main():
+    try:
+        _main.main()
+    except KeyboardInterrupt:
+        pass
+
+main()
