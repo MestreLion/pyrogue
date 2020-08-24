@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program. See <http://www.gnu.org/licenses/gpl.html>
 
-'''Main module and entry point'''
+"""Main module"""
 
 import locale
 locale.setlocale(locale.LC_ALL, '')

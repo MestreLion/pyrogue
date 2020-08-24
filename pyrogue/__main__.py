@@ -15,7 +15,11 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program. See <http://www.gnu.org/licenses/gpl.html>
 
-'''Convenience directory launcher. Allows `python -m pyrogue` invocation'''
+"""Main entry point.
+
+setup.py console_scripts entry point, and also convenience directory launcher.
+Allows `python -m pyrogue` invocation.
+"""
 
 from . import main as _main
 
@@ -25,4 +29,5 @@ def main():
     except KeyboardInterrupt:
         pass
 
-main()
+if __name__ == '__main__':
+    main()
