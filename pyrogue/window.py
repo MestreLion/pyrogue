@@ -184,8 +184,8 @@ class Screen(Window):
         # Upper box - chars showcase
         self.box((1, 0), (3, self.size[1]))
         text = center("".join([' {} '.format(_)
-                               for _ in sorted(chars,
-                                               key=lambda _: chars[_][2])]),
+                               for __ in sorted(chars,
+                                               key=lambda __: chars[_][2])]),
                       self.size[1] - 2)
         for col, char in enumerate(text, 1):
             self.window.addstr(2, col, *self.charattrs(char))

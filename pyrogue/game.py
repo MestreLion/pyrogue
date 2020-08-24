@@ -19,7 +19,6 @@
 
 import string
 import logging
-import curses
 
 from . import g
 from . import input
@@ -110,7 +109,7 @@ class TILE(enum.Enum):
     MONSTER = set(string.ascii_uppercase)
 
 # Add monsters
-[setattr(TILE, _, _) for _ in string.ascii_uppercase]
+[setattr(TILE, __, __) for __ in string.ascii_uppercase]
 
 
 class Game(object):
@@ -199,7 +198,7 @@ class Level(object):
                       for row in range(self.cols)):
             self.dungeon[coord] = things.Item()
 
-        self.dungeon = [[TILE.NOTHING] * self.cols for _ in range(self.rows)]
+        self.dungeon = [[TILE.NOTHING] * self.cols for __ in range(self.rows)]
 
         # create rooms, monsters, etc
         self.dig_dungeon()

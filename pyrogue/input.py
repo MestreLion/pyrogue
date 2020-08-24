@@ -72,8 +72,8 @@ class KEY(enum.Enum):
 
 # The above make static analyzers like Pylint and Pydev happy
 # Now generate all other KEY constants
-for _ in dir(curses):
-    if _.startswith("KEY_"):
+for __ in dir(curses):
+    if __.startswith("KEY_"):
         setattr(KEY, _[4:], getattr(curses, _))
 
 

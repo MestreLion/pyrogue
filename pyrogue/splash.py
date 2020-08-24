@@ -275,7 +275,7 @@ if __name__ == '__main__':
         splashfile = os.path.join(os.path.dirname(__file__), '..', 'rogue.pic')
         display_ascii(splashfile)
         # 960 x 600. Large enough and still safe
-        display_sdl(splashfile, timeout=0, size=3, fullscreen=False)
+        display_sdl(splashfile, timeout=0, size=0, fullscreen=True)
     except KeyboardInterrupt:
         pass
     finally:
