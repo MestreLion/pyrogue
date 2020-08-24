@@ -58,9 +58,9 @@ class COLOR(enum.Enum):
     RED     = (255,   0,   0)
     GREEN   = (  0, 255,   0)
     BLUE    = (  0,   0, 255)
-    CYAN    = (  0, 255, 255)
-    MAGENTA = (255,   0, 255)
     YELLOW  = (255, 255,   0)
+    MAGENTA = (255,   0, 255)
+    CYAN    = (  0, 255, 255)
     WHITE   = (255, 255, 255)
 
 CGA_COLORS = [
@@ -73,34 +73,52 @@ CGA_COLORS = [
 CGA_SIZE = (320, 200, 2)  # 2 bits per pixel = 4 colors
 FPS = 10
 
-cgaterm = {0: 0,
-           1: 6,
-           2: 5,
-           3: 7}
+# Map CGA to 8-color terminal indexes
+cgaterm = {0: 0,  # Black
+           1: 6,  # Cyan
+           2: 5,  # Magenta
+           3: 7}  # White
 
 
-def termreset():
-    return u("\033[00m")
-
-def termcolor(idx, n=1, char="\u2588", transparent_idx=None):
-    if transparent_idx is None or not idx == transparent_idx:
-        out = u("\033[1;3%sm") % (cgaterm[idx],)
-    else:
-        out = termreset()
-        char = u(' ')
-    return out + n * u(char)
-
-
-def display_ascii(filename, lscale=6):
+def display_ascii(filename, div=4, bgcolor=None):
     """
     cols, rows = (CGA_SIZE[0] // 2,
                   CGA_SIZE[1] // 4)
     """
-    cscale = int(lscale / 2) if lscale > 1 else 1
-    n = 1 if cscale > 1 else 2
+    # Sizes
+    if div == 1:
+        cdiv = 1
+        n = 2
+    else:
+        cdiv = int(div / 2)
+        n = 1
+
+    # Colors
+    # Stop right there before reinventing tput!
+    termreset = u("\033[00m")
+    def coloresc(i):
+        if os.environ['TERM'] == 'linux':  # actually, if colors == 8
+            esc = '1;3' + str(i) if i else '0;30'
+        else:
+            esc = i + (90 if i else 30)
+        return u("\033[%sm" % (esc,))
+    def termcolor(i, n=1, bgcolor=None, char="\u2588"):
+        if bgcolor is None or not i == bgcolor:
+            out = escs[i]
+        else:
+            out = termreset
+            char = u(' ')
+        return out + n * u(char)
+    # Map CGA colors to terminal escape strings
+    escs = tuple(coloresc(cgaterm[i]) for i in range(len(cgaterm)))
+    # Map CGA colors to output string
+    colors = tuple(termcolor(i, n, bgcolor) for i in range(len(cgaterm)))
+
     lines = bload(filename)
-    for line in lines[::lscale]:
-        print("".join(termcolor(color, n) for color in line[::cscale]) + termreset())
+    print(termreset, end='')
+    for line in lines[::div]:
+        print("".join(colors[c] for c in line[::cdiv]))
+    print(termreset, end='', flush=True)
 
 
 def display_sdl_ascii(filename, timeout=0, size=(), fullscreen=False):
