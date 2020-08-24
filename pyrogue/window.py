@@ -45,7 +45,7 @@ else:
         return x
 
 
-class COLOR(enum.Enum):
+class COLOR(int, enum.Enum):
     DEFAULT = -1  # Terminal default. Actual color depends on context, fg/bg
     BLACK   =  0  # Background
     RED     =  1
@@ -183,9 +183,9 @@ class Screen(Window):
 
         # Upper box - chars showcase
         self.box((1, 0), (3, self.size[1]))
-        text = center("".join([' {} '.format(_)
+        text = center("".join([' {} '.format(__)
                                for __ in sorted(chars,
-                                               key=lambda __: chars[_][2])]),
+                                               key=lambda __: chars[__][2])]),
                       self.size[1] - 2)
         for col, char in enumerate(text, 1):
             self.window.addstr(2, col, *self.charattrs(char))

@@ -74,7 +74,7 @@ class KEY(enum.Enum):
 # Now generate all other KEY constants
 for __ in dir(curses):
     if __.startswith("KEY_"):
-        setattr(KEY, _[4:], getattr(curses, _))
+        setattr(KEY, __[4:], getattr(curses, __))
 
 
 def ctrl(c):
