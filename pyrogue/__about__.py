@@ -55,7 +55,7 @@ classifiers      = [
     "Topic :: Games/Entertainment",
 ]
 keywords         = "rogue roguelike port"
-entry_points     = {'console_scripts': [f'{__title__} = {__title__}.__main__:main']}
+entry_points     = {'console_scripts': [f'{__title__} = {__title__}.main:start']}
 install_requires = [
 ]
 extras_require   = {

@@ -17,17 +17,20 @@
 
 """Main module"""
 
+# Reset locale so we have full control over terminal encodings
+# Must be performed before importing other modules
 import locale
 locale.setlocale(locale.LC_ALL, '')
 
-import os
-import logging.handlers
 import argparse
 import curses
+import logging.handlers
+import os
+import sys
 
 from . import g
-from . import window
 from . import input
+from . import window
 
 from .game import Game
 
@@ -35,7 +38,7 @@ from .game import Game
 log = logging.getLogger(__name__)
 
 
-def parseargs(argv=None):
+def parseargs(argv):
     parser = argparse.ArgumentParser(
         description="Python port of the PC-DOS classic game Rogue")
 
@@ -72,9 +75,15 @@ def setuplogging():
 
 
 def main(argv=None):
-    '''App entry point
+    """Main function
+
+    Parse arguments, setup logging, read config and (indirectly) call init() via curses.
         <argv>: list of command line arguments, defaults to sys.argv[1:]
-    '''
+
+    For a better console_scripts entry point, use start().
+    """
+    if argv is None:
+        argv = sys.argv[1:]
     args = parseargs(argv)
     setuplogging()
 
@@ -135,3 +144,20 @@ def init(stdscr, args):
         game.new()
 
     game.play()
+
+
+def start(argv=None):
+    """Application entry point.
+
+    Wrapper to main() that sets all top-level exception handling and exit code
+    """
+    try:
+        sys.exit(main(argv))
+    except g.GameError as e:
+        log.error(e)
+        sys.exit(1)
+    except KeyboardInterrupt:
+        sys.exit(2)
+    except Exception as e:
+        log.critical(e, exc_info=True)
+        sys.exit(3)

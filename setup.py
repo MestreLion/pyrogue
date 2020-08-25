@@ -39,6 +39,7 @@ kwargs = dict(
     packages         = packages,
     long_description = readme,
     long_description_content_type = mimetypes.guess_type(about['readme'])[0],
+    zip_safe = False,
 )
 
 # # 'setup.py publish' shortcut.
