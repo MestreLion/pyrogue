@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 #    Copyright (C) 2015 Rodrigo Silva (MestreLion) <linux@rodrigosilva.com>
@@ -48,20 +47,31 @@ else:
 log = logging.getLogger(__name__)
 
 
+# Full CGA 16-color palette
+# https://en.wikipedia.org/wiki/Color_Graphics_Adapter#Color_palette
 class COLOR(enum.Enum):
-    BLACK   = (  0,   0,   0)
-    RED     = (255,   0,   0)
-    GREEN   = (  0, 255,   0)
-    BLUE    = (  0,   0, 255)
-    YELLOW  = (255, 255,   0)
-    MAGENTA = (255,   0, 255)
-    CYAN    = (  0, 255, 255)
-    WHITE   = (255, 255, 255)
+    BLACK         = (  0,   0,   0)
+    BLUE          = (  0,   0, 170)
+    GREEN         = (  0, 170,   0)
+    CYAN          = (  0, 170, 170)
+    RED           = (170,   0,   0)
+    MAGENTA       = (170,   0, 170)
+    BROWN         = (170,  85,   0)
+    LIGHT_GRAY    = (170, 170, 170)
+    DARK_GRAY     = ( 85,  85,  85)
+    LIGHT_BLUE    = ( 85,  85, 255)
+    LIGHT_GREEN   = ( 85, 255,  85)
+    LIGHT_CYAN    = ( 85, 255, 255)
+    LIGHT_RED     = (255,  85,  85)
+    LIGHT_MAGENTA = (255,  85, 255)
+    YELLOW        = (255, 255,  85)
+    WHITE         = (255, 255, 255)
 
+# Mode 4, Palette 1, high-intensity
 CGA_COLORS = [
     COLOR.BLACK,
-    COLOR.CYAN,
-    COLOR.MAGENTA,
+    COLOR.LIGHT_CYAN,
+    COLOR.LIGHT_MAGENTA,
     COLOR.WHITE,
 ]
 
@@ -73,6 +83,10 @@ cgaterm = {0: 0,  # Black
            1: 6,  # Cyan
            2: 5,  # Magenta
            3: 7}  # White
+
+
+def hextriplet(color):
+    return '#' + ''.join('{:02X}'.format(i) for i in color)
 
 
 def display_ascii(filename, div=4, bgcolor=None):
@@ -184,7 +198,11 @@ def display_sdl(filename, timeout=0, size=(), fullscreen=False, videodriver=""):
     pygame.quit()
 
 
-def export_pic(infile, outfile):
+def export_sdl(infile, outfile):
+    """Export a PIC image in BLOAD CGA format using SDL via Pygame.
+
+    Supported output formats: BMP, TGA, PNG, JPEG
+    """
     if pygame is None:
         log.error("pygame module is required to display graphics using SDL")
         return
@@ -194,6 +212,7 @@ def export_pic(infile, outfile):
 
 
 def load_pic(filename, surface):
+    """Load a PIC image file into an SDL surface"""
     lines = bload(filename)
     for row, line in enumerate(lines):
         for col, color in enumerate(line):
@@ -205,18 +224,28 @@ def bload(filename):
         <rows> de-interlaced tuples, each line containing
         <cols> CGA color indexes
     '''
+    # FIXME: should return not only pixel data but pallete and size,
+    # as they can be inferred from the header and padding data
+
     cols, rows, bpp = CGA_SIZE
-    bypl = cols * bpp // 8  # bytes per line
+    bypl = cols * bpp // 8  # = 80 bytes per line
 
     evens = []
     odds  = []
 
     with open(filename, mode='rb') as fp:
+        # 7-byte BSAVE header, ignored by bload():
+        # BYTE Marker         Data type                  FDh = unpacked data
+        # WORD ScreenSegment  PC screen memory segment B800h = CGA video address
+        # WORD ScreenOffset   PC screen memory offset  0000h = no offset
+        # WORD DataSize       Size of screen data      4000h = 16384, 320x200x2bit
+        # FIXME: at least *check* if file has the expected format
         fp.read(7)  # Ignore header
         for lines in (evens, odds):
             for __ in range(rows//2):
                 lines.append(sum(map(tuple, map(unpackcga,
                                                 fp.read(bypl))), ()))
+            # FIXME: Pallete info is in the padding!
             fp.read(192)  # Ignore padding
 
     # De-interlace the lines
@@ -274,13 +303,15 @@ def unpackbits(chars, bpu=2):
 
 
 if __name__ == '__main__':
+    # To run this standalone demo:
+    # python3 -m pyrogue.splash
     try:
         logging.basicConfig(level=logging.DEBUG)
         splashfile = os.path.join(os.path.dirname(__file__), '..', 'rogue.pic')
         #export_pic(splashfile, 'teste.png')
-        display_ascii(splashfile)
+        display_ascii(splashfile, div=4)
         # 960 x 600. Large enough and still safe
-        display_sdl(splashfile, timeout=0, size=0, fullscreen=True)
+        display_sdl(splashfile, timeout=0, size=3, fullscreen=False)
     except KeyboardInterrupt:
         pass
     finally:
