@@ -23,7 +23,7 @@ import logging
 from . import g
 from . import input
 from . import rnd
-from . import enum
+from . import enum2 as enum
 from . import things
 
 from .player import Player

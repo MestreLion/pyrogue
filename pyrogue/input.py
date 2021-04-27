@@ -25,7 +25,8 @@ import sys
 import curses.ascii
 import locale
 
-from . import enum
+# enum from stdlib doesn't allow re-assignments, so we use our custom one
+from . import enum2 as enum
 
 
 if sys.version < '3':

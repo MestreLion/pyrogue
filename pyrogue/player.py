@@ -21,7 +21,7 @@ import logging
 
 from . import g
 from . import rnd
-from . import enum
+from . import enum2 as enum
 
 
 log = logging.getLogger(__name__)

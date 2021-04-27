@@ -29,12 +29,7 @@ try:
 except ImportError:
     pygame = None
 
-try:
-    from . import enum
-except ImportError:
-    import enum
-except ValueError:
-    import enum
+from . import enum2 as enum
 
 
 if sys.version < '3':
